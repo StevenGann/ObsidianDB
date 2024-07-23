@@ -1,4 +1,7 @@
 using System.Security.Cryptography;
+using Markdig;
+using Markdig.Extensions.Yaml;
+using Markdig.Renderers;
 using MessagePack.ImmutableCollection;
 
 namespace ObsidianDB;
@@ -32,10 +35,20 @@ public class Note
         {
             using (var stream = File.OpenRead(path))
             {
-                Hash = BitConverter.ToString(md5.ComputeHash(stream)).Replace("-","").ToLower();
+                Hash = BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", "").ToLower();
             }
         }
+    }
 
+    public string GetPlaintext()
+    {
+        return Markdown.ToPlainText(GetBody());
+    }
 
+    public string GetBody()
+    {
+        string markdown = System.IO.File.ReadAllText(Path);
+
+        return Utilities.RemoveBlock(markdown, "---", "---");
     }
 }
