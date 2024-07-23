@@ -7,7 +7,18 @@ public class ObsidianDB
     public string VaultPath { get; set; }
     public string MetaDataPath { get; set; }
 
-    public List<Tag> Tags{ get; set; } = new List<Tag>();
+    public List<Tag> Tags{ get; set; } = new();
+    public List<Note> Notes{ get; set; } = new();
+
+    public IEnumerable<Note> GetNotes()
+    {
+        int index = 0;
+        while(index < Notes.Count)
+        {
+            yield return Notes[index];
+            index++;
+        }
+    }
 
     public void ScanNotes()
     {
@@ -17,8 +28,12 @@ public class ObsidianDB
         foreach (string file in files)
         {
             Note note = new(file);
-            //Console.WriteLine($"{note.Title} - {note.Hash}");
-            ScanTags(note);
+            Console.WriteLine($"{note.Title} - {note.Hash}");
+            //Console.WriteLine(note.GetPlaintext());
+            //ScanTags(note);
+            //Console.WriteLine("========");
+            Notes.Add(note);
+            //Console.ReadLine();
         }
     }
 
@@ -42,7 +57,7 @@ public class ObsidianDB
                     {
                         if(Tags.Find(i => i.Name == token.Trim('#', ',', '.', '!', '?')) == null)
                         {
-                            Console.WriteLine(token);
+                            //Console.WriteLine(token);
                             Tags.Add(new(token));
                         }
                     }
