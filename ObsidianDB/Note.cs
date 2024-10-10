@@ -15,9 +15,39 @@ public class Note
     public string Path { get; set; }
     public string Filename { get; set; }
     public string? ID { get; set; }
-    public string? Hash { get; set; }
+    public string? Hash 
+    {
+        get
+        {
+            if (Frontmatter.ContainsKey == null)
+            {
+                bodyCache = GetBody(Path);
+            }
+            return bodyCache!;
+        }
+    }
     public Dictionary<string, List<string>?> Frontmatter = new();
     public List<string> Tags = new();
+
+    public string Body
+    {
+        get
+        {
+            if (bodyCache == null)
+            {
+                bodyCache = GetBody(Path);
+            }
+            return bodyCache!;
+        }
+
+        set
+        {
+            bodyCache = value;
+            Save();
+        }
+    }
+
+    private string? bodyCache = null;
 
     const string HashKey = "hash";
     const string IdKey = "guid";
@@ -34,15 +64,84 @@ public class Note
         else { ID = InsertGUID(path); }
         if (Frontmatter.ContainsKey(HashKey))
         {
-            Hash = Frontmatter[HashKey]!.FirstOrDefault();
-            if (!ValidateHash(Hash!, path))
+            if (!ValidateHash())
             {
                 // ToDo: Queue callback
             }
         }
-        else { Hash = InsertHash(path); }
+        else { InsertHash(path); }
 
         Tags = ExtractTags(lines, Frontmatter);
+    }
+
+    public void Save()
+    {
+        if (bodyCache == null) { bodyCache = GetBody(Path); }
+        List<string> document = new();
+
+        if(Frontmatter.ContainsKey("date modified") && Frontmatter["date modified"] != null)
+        {
+            string modified = DateTime.Now.ToString("dddd, MMMM d yyyy, h:M:ss tt");
+            Frontmatter["date modified"] = [modified];
+        }
+
+        // Assemble frontmatter
+        document.Add("---");
+        foreach(string key in Frontmatter.Keys)
+        {
+            if(Frontmatter[key] == null)
+            {
+                document.Add($"{key}:");
+            }
+            else if(Frontmatter[key]!.Count == 1)
+            {
+                document.Add($"{key}: {Frontmatter[key]![0]}");
+            }
+            else if(Frontmatter[key]!.Count > 1)
+            {
+                document.Add($"{key}:");
+                foreach (string value in Frontmatter[key]!)
+                {
+                    document.Add($"  - {value}");
+                }
+            }
+        }
+        document.Add("---");
+
+        document.Add(bodyCache);
+
+        System.IO.File.WriteAllLines(Path, document.ToArray());
+        ValidateHash(Hash!, Path);
+    }
+
+    private string GetBody(string path)
+    {
+        string[] lines = System.IO.File.ReadAllLines(path);
+        List<string> bodyLines = new();
+        int index = 0;
+        while (index < lines.Length && !lines[index].StartsWith("---")) // Looking for start of YAML block
+        {
+            index++;
+        }
+        index += 1;
+        while (index < lines.Length && !lines[index].StartsWith("---")) // Until end of YAML block
+        {
+            index++;
+        }
+        index++;
+
+        while (index < lines.Length)
+        {
+            bodyLines.Add(lines[index]);
+            index++;
+        }
+
+        string result = "";
+        foreach (string line in bodyLines)
+        {
+            result += $"{line}\n";
+        }
+        return result;
     }
 
     private bool ValidateHash(string hash, string path)
@@ -53,6 +152,7 @@ public class Note
         if (hash == calculatedHash) { return true; }
 
         // Update Hash
+        Console.WriteLine("Updating hash to " + calculatedHash);
         int index = 0;
         while (index < lines.Length && !lines[index].StartsWith($"{HashKey}:")) // Looking for hash YAML tag
         {
@@ -60,6 +160,7 @@ public class Note
         }
         lines[index] = $"{HashKey}: {calculatedHash}";
         System.IO.File.WriteAllLines(path, lines);
+        Hash = calculatedHash;
 
         return false;
     }
@@ -116,6 +217,15 @@ public class Note
     private List<string> ExtractTags(string[] lines, Dictionary<string, List<string>?>? frontmatter = null)
     {
         List<string> tags = new();
+
+        if (frontmatter != null && frontmatter.ContainsKey("tags") && frontmatter["tags"] != null)
+        {
+            foreach (string tag in frontmatter["tags"]!)
+            {
+                tags.Add(tag);
+            }
+        }
+
         int index = 0;
         while (index < lines.Length && !lines[index].StartsWith("---")) // Looking for start of YAML block
         {
@@ -132,10 +242,11 @@ public class Note
             string[] tokens = lines[index].Split(' ');
             foreach (string token in tokens)
             {
-                if(token.Trim().StartsWith("#") && !(token.Trim().StartsWith("##") || token.Trim().EndsWith("#")))
+                if (token.Trim().StartsWith("#") && !(token.Trim().StartsWith("##") || token.Trim().EndsWith("#")))
                 {
                     string tag = token.Trim(' ', ',', '.', ';', '\t', '\n', '#');
-                    Console.WriteLine(tag);
+                    //Console.WriteLine(tag);
+                    tags.Add(tag);
                 }
             }
             index++;

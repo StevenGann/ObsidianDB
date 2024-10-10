@@ -27,12 +27,6 @@ public class ObsidianDB
         foreach (string file in files)
         {
             Note note = new(file);
-            Console.WriteLine($"{note.Title} - {note.Hash}");
-            //Console.WriteLine(note.GetPlaintext());
-            //ScanTags(note);
-            //Console.WriteLine("========");
-            Notes.Add(note);
-            //Console.ReadLine();
         }
     }
 }
