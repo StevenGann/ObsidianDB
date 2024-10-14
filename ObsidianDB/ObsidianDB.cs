@@ -1,4 +1,5 @@
-﻿using System.Security.Principal;
+﻿using System.Runtime.CompilerServices;
+using System.Security.Principal;
 
 namespace ObsidianDB;
 
@@ -27,6 +28,22 @@ public class ObsidianDB
         foreach (string file in files)
         {
             Note note = new(file);
+            Notes.Add(note);
         }
+    }
+
+    public Note? GetFromId(string id)
+    {
+        foreach (Note note in Notes)
+        {
+            if (note.ID == id){return note;}
+        }
+
+        return null;
+    }
+
+    public void Update()
+    {
+        CallbackManager.Tick(this);
     }
 }

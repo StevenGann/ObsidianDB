@@ -4,12 +4,17 @@
 
 using ObsidianDB;
 
-Note note = new ObsidianDB.Note(@"C:\Users\owner\OneDrive\Apps\remotely-save\Vault\Projects\Knowledgebase-AI\ObsidianDB.md");
+//Note note = new ObsidianDB.Note(@"C:\Users\owner\OneDrive\Apps\remotely-save\Vault\Projects\Knowledgebase-AI\ObsidianDB.md");
 //note.Frontmatter.Add("debug", ["testing"]);
 //note.Body = "A quick test\n" + note.Body;
-note.Save();
+//note.Save();
 
 
-//ObsidianDB.ObsidianDB db = new();
-//db.VaultPath = @"C:\Users\owner\OneDrive\Apps\remotely-save\Vault";
-//db.ScanNotes();
+ObsidianDB.ObsidianDB db = new();
+db.VaultPath = @"C:\Users\owner\OneDrive\Apps\remotely-save\Vault";
+db.ScanNotes();
+
+while(true)
+{
+    db.Update();
+}

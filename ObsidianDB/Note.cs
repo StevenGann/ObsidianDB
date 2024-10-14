@@ -1,29 +1,34 @@
 using System.Security.Cryptography;
 using System.Text;
-using System.Xml.XPath;
-using Markdig;
-using Markdig.Extensions.Yaml;
 using Markdig.Helpers;
-using Markdig.Renderers;
-using MessagePack.ImmutableCollection;
 
 namespace ObsidianDB;
 
 public class Note
 {
-    public string Title { get; set; }
+    public string? Title { get; set; } = null;
     public string Path { get; set; }
     public string Filename { get; set; }
-    public string? ID { get; set; }
-    public string? Hash 
+    public string ID
     {
         get
         {
-            if (Frontmatter.ContainsKey == null)
+            if (!Frontmatter.ContainsKey(IdKey) && Frontmatter[IdKey]!.FirstOrDefault() == null)
             {
-                bodyCache = GetBody(Path);
+                InsertGUID();
             }
-            return bodyCache!;
+            return Frontmatter[IdKey]!.FirstOrDefault()!;
+        }
+    }
+    public string Hash
+    {
+        get
+        {
+            if (!Frontmatter.ContainsKey(HashKey) && Frontmatter[HashKey]!.FirstOrDefault() == null)
+            {
+                ValidateHash();
+            }
+            return Frontmatter[HashKey]!.FirstOrDefault()!;
         }
     }
     public Dictionary<string, List<string>?> Frontmatter = new();
@@ -60,18 +65,28 @@ public class Note
         Path = path;
         Filename = System.IO.Path.GetFileName(path);
         Frontmatter = ExtractFrontMatter(lines);
-        if (Frontmatter.ContainsKey(IdKey)) { ID = Frontmatter[IdKey]!.FirstOrDefault(); }
-        else { ID = InsertGUID(path); }
+        if (!Frontmatter.ContainsKey(IdKey) || Frontmatter[IdKey]!.FirstOrDefault() == null)
+        {
+            InsertGUID();
+        }
         if (Frontmatter.ContainsKey(HashKey))
         {
-            if (!ValidateHash())
-            {
-                // ToDo: Queue callback
-            }
+            ValidateHash();
         }
-        else { InsertHash(path); }
+        else { InsertHash(); }
 
         Tags = ExtractTags(lines, Frontmatter);
+
+        Console.WriteLine("========");
+        Console.WriteLine($"{Path}");
+        Console.WriteLine($"Title: {Title}, {Filename}");
+        Console.WriteLine($"{ID}");
+        Console.WriteLine($"{Hash}");
+        Console.WriteLine($"Tags:");
+        foreach (string tag in Tags)
+        {
+            Console.WriteLine($" - #{tag}");
+        }
     }
 
     public void Save()
@@ -79,7 +94,7 @@ public class Note
         if (bodyCache == null) { bodyCache = GetBody(Path); }
         List<string> document = new();
 
-        if(Frontmatter.ContainsKey("date modified") && Frontmatter["date modified"] != null)
+        if (Frontmatter.ContainsKey("date modified") && Frontmatter["date modified"] != null)
         {
             string modified = DateTime.Now.ToString("dddd, MMMM d yyyy, h:M:ss tt");
             Frontmatter["date modified"] = [modified];
@@ -87,17 +102,17 @@ public class Note
 
         // Assemble frontmatter
         document.Add("---");
-        foreach(string key in Frontmatter.Keys)
+        foreach (string key in Frontmatter.Keys)
         {
-            if(Frontmatter[key] == null)
+            if (Frontmatter[key] == null)
             {
                 document.Add($"{key}:");
             }
-            else if(Frontmatter[key]!.Count == 1)
+            else if (Frontmatter[key]!.Count == 1)
             {
                 document.Add($"{key}: {Frontmatter[key]![0]}");
             }
-            else if(Frontmatter[key]!.Count > 1)
+            else if (Frontmatter[key]!.Count > 1)
             {
                 document.Add($"{key}:");
                 foreach (string value in Frontmatter[key]!)
@@ -111,7 +126,7 @@ public class Note
         document.Add(bodyCache);
 
         System.IO.File.WriteAllLines(Path, document.ToArray());
-        ValidateHash(Hash!, Path);
+        ValidateHash();
     }
 
     private string GetBody(string path)
@@ -144,12 +159,12 @@ public class Note
         return result;
     }
 
-    private bool ValidateHash(string hash, string path)
+    private bool ValidateHash()
     {
-        string[] lines = System.IO.File.ReadAllLines(path);
+        string[] lines = System.IO.File.ReadAllLines(Path);
         string calculatedHash = GenerateHash(lines);
 
-        if (hash == calculatedHash) { return true; }
+        if (Hash == calculatedHash) { return true; }
 
         // Update Hash
         Console.WriteLine("Updating hash to " + calculatedHash);
@@ -159,15 +174,17 @@ public class Note
             index++;
         }
         lines[index] = $"{HashKey}: {calculatedHash}";
-        System.IO.File.WriteAllLines(path, lines);
-        Hash = calculatedHash;
+        System.IO.File.WriteAllLines(Path, lines);
+        Frontmatter[HashKey] = [calculatedHash];
+
+        CallbackManager.EnqueueUpdate(ID);
 
         return false;
     }
 
-    private string? InsertHash(string path)
+    private string? InsertHash()
     {
-        string[] lines = System.IO.File.ReadAllLines(path);
+        string[] lines = System.IO.File.ReadAllLines(Path);
         string hash = GenerateHash(lines);
 
         int index = 0;
@@ -176,7 +193,7 @@ public class Note
             index++;
         }
         lines[index] += $"\n{HashKey}: {hash}";
-        System.IO.File.WriteAllLines(path, lines);
+        System.IO.File.WriteAllLines(Path, lines);
 
         Frontmatter.Add(HashKey, [hash]);
         return hash;
@@ -252,12 +269,40 @@ public class Note
             index++;
         }
 
+        tags = DigestTags(tags);
+
         return tags;
     }
 
-    private string InsertGUID(string path)
+    private static List<string> DigestTags(List<string> tags)
     {
-        string[] lines = System.IO.File.ReadAllLines(path);
+        List<string> expanded = new();
+
+        foreach (string tag in tags)
+        {
+            if (tag.Contains('/') || tag.Contains('\\'))
+            {
+                var tokens = tag.Split('/', '\\');
+                string aggregate = tokens[0];
+                expanded.Add(aggregate);
+                for (int i = 1; i < tokens.Length; i++)
+                {
+                    aggregate += $"/{tokens[i]}";
+                    expanded.Add(aggregate);
+                }
+            }
+        }
+
+        return expanded.Distinct().ToList();
+    }
+
+    private string InsertGUID()
+    {
+        if (Frontmatter.ContainsKey(IdKey) && Frontmatter[IdKey] != null)
+        {
+            return Frontmatter[IdKey]!.FirstOrDefault()!;
+        }
+        string[] lines = System.IO.File.ReadAllLines(Path);
         string id = Guid.NewGuid().ToString();
 
         int index = 0;
@@ -266,7 +311,7 @@ public class Note
             index++;
         }
         lines[index] += $"\n{IdKey}: {id}";
-        System.IO.File.WriteAllLines(path, lines);
+        System.IO.File.WriteAllLines(Path, lines);
 
         Frontmatter.Add(IdKey, [id]);
         return id;
@@ -301,7 +346,10 @@ public class Note
                 if (!lines[index].Trim().EndsWith(':'))//Single line YAML key-value
                 {
                     string value = lines[index].Substring(key.Length + 1).Trim();
-                    result.Add(key, [value]);
+                    if (!result.ContainsKey(key))
+                    {
+                        result.Add(key, [value]);
+                    }
                     children = null;
                 }
                 else
@@ -326,7 +374,7 @@ public class Note
         return result;
     }
 
-    private string ExtractTitle(string[] lines)
+    private string? ExtractTitle(string[] lines)
     {
         foreach (var line in lines)
         {
@@ -337,6 +385,6 @@ public class Note
             }
         }
 
-        return "";
+        return null;
     }
 }
