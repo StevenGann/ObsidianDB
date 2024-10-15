@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 
 namespace ObsidianDB;
 
@@ -7,6 +8,8 @@ public class SyncManager
 {
     private FileSystemWatcher? watcher;
     private ObsidianDB? DB;
+
+    string lockedPath = "";
     public SyncManager(ObsidianDB db)
     {
         DB = db;
@@ -32,23 +35,34 @@ public class SyncManager
 
     public void Tick()
     {
-        
+
     }
 
-    internal void ResyncNote(string path)
+    internal void ReloadNote(string path)
     {
-        throw new NotImplementedException();
+        lock (lockedPath)
+        {
+            lockedPath = path;
+            Thread.Sleep(1);
+            Note temp = new(path);
+            Thread.Sleep(1);
+            Note note = DB!.GetFromId(temp.ID)!;
+            note.Reload();
+        }
+        Thread.Sleep(1);
+        lock (lockedPath) { lockedPath = ""; Thread.Sleep(1); }
     }
 
     private void OnChanged(object sender, FileSystemEventArgs e)
     {
         if (e.ChangeType != WatcherChangeTypes.Changed)
         {
-            ResyncNote(e.FullPath);
             return;
         }
+        if (e.FullPath == lockedPath) { return; }
         Console.WriteLine($"Changed: {e.FullPath}");
-
+        Console.WriteLine(lockedPath);
+        ReloadNote(e.FullPath);
     }
 
     private void OnCreated(object sender, FileSystemEventArgs e)

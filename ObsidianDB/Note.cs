@@ -92,6 +92,41 @@ public class Note
         }
     }
 
+    public void Reload(string path = "")
+    {
+        if(path != "")
+        {
+            Path = path;
+        }
+        string[] lines = System.IO.File.ReadAllLines(Path);
+
+        Title = ExtractTitle(lines);
+        Filename = System.IO.Path.GetFileName(Path);
+        Frontmatter = ExtractFrontMatter(lines);
+        if (!Frontmatter.ContainsKey(IdKey) || Frontmatter[IdKey]!.FirstOrDefault() == null)
+        {
+            InsertGUID();
+        }
+        if (Frontmatter.ContainsKey(HashKey))
+        {
+            ValidateHash();
+        }
+        else { InsertHash(); }
+
+        Tags = ExtractTags(lines, Frontmatter);
+
+        Console.WriteLine("========");
+        Console.WriteLine($"{Path}");
+        Console.WriteLine($"Title: {Title}, {Filename}");
+        Console.WriteLine($"{ID}");
+        Console.WriteLine($"{Hash}");
+        Console.WriteLine($"Tags:");
+        foreach (string tag in Tags)
+        {
+            Console.WriteLine($" - #{tag}");
+        }
+    }
+
     public void Save()
     {
         if (bodyCache == null) { bodyCache = GetBody(Path); }
@@ -390,4 +425,6 @@ public class Note
 
         return null;
     }
+
+    
 }

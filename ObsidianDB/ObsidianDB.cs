@@ -34,6 +34,7 @@ public class ObsidianDB
         VaultPath = path;
         syncManager = new(this);
         callbackManager = new(this);
+        obsidianDBs.Add(this);
     }
 
     public IEnumerable<Note> GetNotes()
