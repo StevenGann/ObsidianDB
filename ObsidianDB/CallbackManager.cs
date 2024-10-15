@@ -1,13 +1,23 @@
+using System;
+using System.Collections.Generic;
+
 namespace ObsidianDB;
 
-public static class CallbackManager
+public class CallbackManager
 {
     public delegate void Callback(Note note);
 
-    private static Dictionary<string, List<Callback>> subscriptions = new();
-    public static List<string> updates = new();
+    private Dictionary<string, List<Callback>> subscriptions = new();
+    public List<string> updates = new();
 
-    public static void Subscribe(string id, Callback callback)
+    internal ObsidianDB DB;
+
+    public CallbackManager(ObsidianDB db)
+    {
+        DB = db;
+    }
+
+    public void Subscribe(string id, Callback callback)
     {
         if (subscriptions.ContainsKey(id))
         {
@@ -19,14 +29,14 @@ public static class CallbackManager
         }
     }
 
-    internal static void Tick(ObsidianDB db)
+    internal void Tick()
     {
         foreach (string id in updates)
         {
             if (subscriptions.ContainsKey(id))
             {
 
-                Note? note = db.GetFromId(id);
+                Note? note = DB.GetFromId(id);
                 if (note != null)
                 {
                     Console.WriteLine($"Triggering {subscriptions[id].Count} callback(s) for {note.Title}");
@@ -44,7 +54,7 @@ public static class CallbackManager
         }
     }
 
-    internal static void EnqueueUpdate(string id)
+    internal void EnqueueUpdate(string id)
     {
         if (!subscriptions.ContainsKey(id)) { return; }
         if (updates.Contains(id)) { return; }

@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+
 namespace ObsidianDB;
 
 public static class Utilities
@@ -27,5 +30,17 @@ public static class Utilities
     public static bool ContainsPlaintext(string text)
     {
         return text.Any(x => char.IsLetter(x));
+    }
+
+    public static void PrintException(Exception? ex)
+    {
+        if (ex != null)
+        {
+            Console.WriteLine($"Message: {ex.Message}");
+            Console.WriteLine("Stacktrace:");
+            Console.WriteLine(ex.StackTrace);
+            Console.WriteLine();
+            PrintException(ex.InnerException);
+        }
     }
 }

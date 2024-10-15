@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Markdig.Helpers;
@@ -177,7 +180,7 @@ public class Note
         System.IO.File.WriteAllLines(Path, lines);
         Frontmatter[HashKey] = [calculatedHash];
 
-        CallbackManager.EnqueueUpdate(ID);
+        ObsidianDB.GetDatabaseInstance(Path)!.callbackManager.EnqueueUpdate(ID);
 
         return false;
     }
