@@ -53,6 +53,19 @@ public class SyncManager
         lock (lockedPath) { lockedPath = ""; Thread.Sleep(1); }
     }
 
+    internal void CommitNote(string id)
+    {
+        Note note = DB.GetFromId(id) ;
+        lock (lockedPath)
+        {            
+            lockedPath = note.Path;
+            Thread.Sleep(1);
+            note.Save();
+        }
+        Thread.Sleep(1);
+        lock (lockedPath) { lockedPath = ""; Thread.Sleep(1); }
+    }
+
     private void OnChanged(object sender, FileSystemEventArgs e)
     {
         if (e.ChangeType != WatcherChangeTypes.Changed)

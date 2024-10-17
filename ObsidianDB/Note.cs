@@ -127,7 +127,7 @@ public class Note
         }
     }
 
-    public void Save()
+    internal void Save()
     {
         if (bodyCache == null) { bodyCache = GetBody(Path); }
         List<string> document = new();
