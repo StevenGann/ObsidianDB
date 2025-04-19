@@ -388,34 +388,81 @@ public class Note
     /// </summary>
     /// <param name="path">The path to the note file.</param>
     /// <returns>The body content of the note as a string.</returns>
+    /// <exception cref="FileNotFoundException">Thrown when the note file is not found.</exception>
+    /// <exception cref="IOException">Thrown when there's an error reading the file.</exception>
+    /// <exception cref="ArgumentException">Thrown when the path is invalid.</exception>
     private string GetBody(string path)
     {
-        string[] lines = System.IO.File.ReadAllLines(path);
-        List<string> bodyLines = new();
-        int index = 0;
-        while (index < lines.Length && !lines[index].StartsWith("---")) // Looking for start of YAML block
+        try
         {
-            index++;
-        }
-        index += 1;
-        while (index < lines.Length && !lines[index].StartsWith("---")) // Until end of YAML block
-        {
-            index++;
-        }
-        index++;
+            _logger.LogInformation("Reading note body from {Path}", path);
 
-        while (index < lines.Length)
-        {
-            bodyLines.Add(lines[index]);
-            index++;
-        }
+            // Validate path
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentException("Path cannot be empty", nameof(path));
+            }
 
-        string result = "";
-        foreach (string line in bodyLines)
-        {
-            result += $"{line}\n";
+            if (!File.Exists(path))
+            {
+                throw new FileNotFoundException($"Note file not found at path: {path}");
+            }
+
+            // Read all lines with proper line ending handling
+            string[] lines = File.ReadAllLines(path);
+            if (lines.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            // Find the YAML frontmatter boundaries
+            int startIndex = Array.FindIndex(lines, line => line.Trim() == "---");
+            if (startIndex == -1)
+            {
+                // No frontmatter, return entire content
+                return string.Join(Environment.NewLine, lines);
+            }
+
+            int endIndex = Array.FindIndex(lines, startIndex + 1, line => line.Trim() == "---");
+            if (endIndex == -1)
+            {
+                // Invalid frontmatter, return content after first ---
+                return string.Join(Environment.NewLine, lines.Skip(startIndex + 1));
+            }
+
+            // Extract body content
+            var bodyLines = new List<string>();
+            for (int i = endIndex + 1; i < lines.Length; i++)
+            {
+                bodyLines.Add(lines[i]);
+            }
+
+            // Optimize string concatenation
+            if (bodyLines.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            // Use StringBuilder for efficient string concatenation
+            var sb = new StringBuilder();
+            for (int i = 0; i < bodyLines.Count; i++)
+            {
+                sb.Append(bodyLines[i]);
+                if (i < bodyLines.Count - 1)
+                {
+                    sb.Append(Environment.NewLine);
+                }
+            }
+
+            string result = sb.ToString();
+            _logger.LogDebug("Successfully read note body from {Path}, length: {Length}", path, result.Length);
+            return result;
         }
-        return result;
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error reading note body from {Path}: {Message}", path, ex.Message);
+            throw;
+        }
     }
 
     /// <summary>
