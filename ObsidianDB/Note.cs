@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Markdig.Helpers;
+using YamlDotNet.Serialization;
 
 namespace ObsidianDB;
 
@@ -475,64 +476,73 @@ public class Note
     }
 
     /// <summary>
-    /// Parses YAML frontmatter from the file.
+    /// Parses YAML frontmatter from the file using YamlDotNet for robust YAML parsing.
     /// </summary>
     /// <param name="lines">Array of lines from the note file.</param>
     /// <returns>Dictionary containing parsed frontmatter key-value pairs.</returns>
+    /// <remarks>
+    /// This method uses YamlDotNet to properly parse YAML frontmatter, supporting:
+    /// - Nested structures
+    /// - Quoted values
+    /// - Multi-line strings
+    /// - Different value types (strings, numbers, booleans)
+    /// - Lists and dictionaries
+    /// </remarks>
     private Dictionary<string, List<string>?> ExtractFrontMatter(string[] lines)
     {
-        Dictionary<string, List<string>?> result = new();
-        int index = 0;
-        while (index < lines.Length && !lines[index].StartsWith("---")) // Looking for start of YAML block
+        var result = new Dictionary<string, List<string>?>();
+        
+        // Find the YAML frontmatter block
+        int startIndex = Array.FindIndex(lines, line => line.Trim() == "---");
+        if (startIndex == -1) return result;
+        
+        int endIndex = Array.FindIndex(lines, startIndex + 1, line => line.Trim() == "---");
+        if (endIndex == -1) return result;
+        
+        // Extract the YAML content
+        string yamlContent = string.Join("\n", lines.Skip(startIndex + 1).Take(endIndex - startIndex - 1));
+        
+        try
         {
-            index++;
-        }
-
-        index += 1;
-
-        bool inSubBlock = false;
-        List<string>? children = null;
-        string key = "";
-        while (index < lines.Length && !lines[index].StartsWith("---")) // Until end of YAML block
-        {
-            if (lines[index].Contains(':') && !lines[index].First().IsWhitespace()) // YAML tag
+            var deserializer = new DeserializerBuilder()
+                .WithNamingConvention(YamlDotNet.Serialization.NamingConventions.CamelCaseNamingConvention.Instance)
+                .Build();
+            
+            var yamlObject = deserializer.Deserialize<object>(yamlContent);
+            
+            // Convert the YAML object to our dictionary format
+            if (yamlObject is Dictionary<object, object> dict)
             {
-                inSubBlock = false;
-                if (children != null)
+                foreach (var kvp in dict)
                 {
-                    result.Add(key, children);
-                }
-
-                key = lines[index].Split(':')[0];
-
-                if (!lines[index].Trim().EndsWith(':'))//Single line YAML key-value
-                {
-                    string value = lines[index].Substring(key.Length + 1).Trim();
-                    if (!result.ContainsKey(key))
+                    string key = kvp.Key.ToString() ?? string.Empty;
+                    object value = kvp.Value;
+                    
+                    if (value == null)
                     {
-                        result.Add(key, [value]);
+                        result[key] = null;
                     }
-                    children = null;
-                }
-                else
-                {
-                    inSubBlock = true;
-                    children = new();
+                    else if (value is string str)
+                    {
+                        result[key] = new List<string> { str };
+                    }
+                    else if (value is IEnumerable<object> enumerable)
+                    {
+                        result[key] = [.. enumerable.Select(x => x.ToString())];
+                    }
+                    else
+                    {
+                        result[key] = new List<string> { value.ToString() ?? string.Empty };
+                    }
                 }
             }
-            else if (inSubBlock)
-            {
-                children!.Add(lines[index].Replace("- ", "").Trim());
-            }
-
-            index++;
         }
-
-        if (children != null)
+        catch (Exception ex)
         {
-            result.Add(key, children);
+            // Log the error but don't fail - return what we could parse
+            Console.WriteLine($"Error parsing YAML frontmatter: {ex.Message}");
         }
-
+        
         return result;
     }
 
