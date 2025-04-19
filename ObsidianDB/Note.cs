@@ -547,12 +547,13 @@ public class Note
     }
 
     /// <summary>
-    /// Extracts the title from the first H1 heading.
+    /// Extracts the title from the first H1 heading or falls back to the filename without extension.
     /// </summary>
     /// <param name="lines">Array of lines from the note file.</param>
-    /// <returns>The title string if found, null otherwise.</returns>
+    /// <returns>The title string if found, or the filename without extension as fallback.</returns>
     private string? ExtractTitle(string[] lines)
     {
+        // First try to find an H1 heading
         foreach (var line in lines)
         {
             if (line.Trim().StartsWith("# "))
@@ -562,6 +563,8 @@ public class Note
             }
         }
 
-        return null;
+        // If no H1 heading found, use the filename without extension
+        string filename = System.IO.Path.GetFileNameWithoutExtension(Path);
+        return filename;
     }
 }
