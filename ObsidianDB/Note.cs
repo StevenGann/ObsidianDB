@@ -603,6 +603,7 @@ public class Note
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to update hash for note: {Path}", Path);
                 // Restore from backup if available
                 if (File.Exists(backupPath))
                 {
@@ -708,6 +709,7 @@ public class Note
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to insert hash for note: {Path}", Path);
                 // Restore from backup if available
                 if (File.Exists(backupPath))
                 {
@@ -741,7 +743,7 @@ public class Note
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error inserting hash for note {Path}: {Message}", Path, ex.Message);
+            _logger.LogError(ex, "Error inserting hash for note: {Path}", Path);
             throw;
         }
     }
@@ -1030,6 +1032,7 @@ public class Note
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to insert GUID for note: {Path}", Path);
                 // Restore from backup if available
                 if (File.Exists(backupPath))
                 {
@@ -1063,7 +1066,7 @@ public class Note
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error inserting GUID for note {Path}: {Message}", Path, ex.Message);
+            _logger.LogError(ex, "Error inserting GUID for note: {Path}", Path);
             throw;
         }
     }
