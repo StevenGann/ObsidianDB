@@ -116,6 +116,8 @@ public class SyncManager
         Console.WriteLine($"    New: {e.FullPath}");
     }
 
-    private void OnError(object sender, ErrorEventArgs e) =>
-        Utilities.PrintException(e.GetException());
+    private void OnError(object sender, ErrorEventArgs e)
+    {
+        _logger.LogError(e.GetException(), "File system watcher error occurred");
+    }
 }
