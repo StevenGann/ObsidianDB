@@ -409,33 +409,38 @@ public class Note
     }
 
     /// <summary>
-    /// Processes hierarchical tags (e.g., "folder/subfolder").
+    /// Processes hierarchical tags (e.g., "topic/sub-topic").
     /// </summary>
     /// <param name="tags">List of raw tags to process.</param>
     /// <returns>List of expanded hierarchical tags.</returns>
     /// <remarks>
-    /// For a tag like "folder/subfolder", generates both "folder" and "folder/subfolder" tags.
+    /// For a tag like "topic/sub-topic", generates both "topic" and "topic/sub-topic" tags.
     /// </remarks>
     private static List<string> DigestTags(List<string> tags)
     {
-        List<string> expanded = new();
+        HashSet<string> expanded = new(tags.Count * 2); // Pre-allocate based on expected size
+        StringBuilder builder = new();
 
         foreach (string tag in tags)
         {
-            if (tag.Contains('/') || tag.Contains('\\'))
+            int separatorIndex = tag.IndexOfAny(new[] { '/', '\\' });
+            if (separatorIndex == -1) continue;
+
+            string[] tokens = tag.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+            if (tokens.Length < 2) continue;
+
+            builder.Clear();
+            builder.Append(tokens[0]);
+            expanded.Add(tokens[0]);
+
+            for (int i = 1; i < tokens.Length; i++)
             {
-                var tokens = tag.Split('/', '\\');
-                string aggregate = tokens[0];
-                expanded.Add(aggregate);
-                for (int i = 1; i < tokens.Length; i++)
-                {
-                    aggregate += $"/{tokens[i]}";
-                    expanded.Add(aggregate);
-                }
+                builder.Append('/').Append(tokens[i]);
+                expanded.Add(builder.ToString());
             }
         }
 
-        return expanded.Distinct().ToList();
+        return expanded.ToList();
     }
 
     /// <summary>
