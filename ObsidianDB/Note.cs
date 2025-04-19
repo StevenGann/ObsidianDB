@@ -514,40 +514,60 @@ public class Note
     }
 
     /// <summary>
-    /// Generates MD5 hash of note content.
+    /// Generates MD5 hash of note content, excluding the YAML frontmatter.
     /// </summary>
     /// <param name="lines">Array of lines from the note file.</param>
     /// <returns>Base64 encoded MD5 hash of the content.</returns>
+    /// <remarks>
+    /// The hash is calculated from the note's content only, excluding the YAML frontmatter.
+    /// This ensures that updating the hash in the frontmatter doesn't change the hash itself.
+    /// </remarks>
     private string GenerateHash(string[] lines)
     {
-        string result = "error";
-        using (var md5 = MD5.Create())
+        try
         {
-            int index = 0;
-            while (index < lines.Length && !lines[index].StartsWith("---")) // Looking for start of YAML block
-            {
-                var inputBuffer = Encoding.UTF8.GetBytes(lines[index]);
-                md5.TransformBlock(inputBuffer, 0, inputBuffer.Length, inputBuffer, 0);
-                index++;
-            }
-            index += 1;
-            while (index < lines.Length && !lines[index].StartsWith("---")) // Until end of YAML block
-            {
-                index++;
-            }
-            index++;
+            _logger.LogDebug("Generating hash for note content");
 
-            while (index < lines.Length)
+            // Find YAML frontmatter boundaries
+            int startIndex = Array.FindIndex(lines, line => line.Trim() == "---");
+            if (startIndex == -1)
             {
-                var inputBuffer = Encoding.UTF8.GetBytes(lines[index]);
-                md5.TransformBlock(inputBuffer, 0, inputBuffer.Length, inputBuffer, 0);
-                index++;
+                // No frontmatter, hash entire content
+                return CalculateContentHash(lines);
             }
 
-            md5.TransformFinalBlock([], 0, 0);
-            result = Convert.ToBase64String(md5.Hash!);
+            int endIndex = Array.FindIndex(lines, startIndex + 1, line => line.Trim() == "---");
+            if (endIndex == -1)
+            {
+                // Invalid frontmatter, hash content after first ---
+                return CalculateContentHash(lines.Skip(startIndex + 1).ToArray());
+            }
+
+            // Hash content after frontmatter
+            return CalculateContentHash(lines.Skip(endIndex + 1).ToArray());
         }
-        return result;
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating hash: {Message}", ex.Message);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Calculates the MD5 hash of the given lines.
+    /// </summary>
+    /// <param name="lines">Array of lines to hash.</param>
+    /// <returns>Base64 encoded MD5 hash of the content.</returns>
+    private static string CalculateContentHash(string[] lines)
+    {
+        using var md5 = MD5.Create();
+        var encoding = Encoding.UTF8;
+
+        // Process all lines in a single operation
+        byte[] contentBytes = encoding.GetBytes(string.Join(Environment.NewLine, lines));
+        byte[] hashBytes = md5.ComputeHash(contentBytes);
+
+        return Convert.ToBase64String(hashBytes);
     }
 
     /// <summary>
