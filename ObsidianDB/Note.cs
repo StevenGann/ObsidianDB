@@ -7,11 +7,34 @@ using Markdig.Helpers;
 
 namespace ObsidianDB;
 
+/// <summary>
+/// Represents a Markdown note file in an Obsidian vault, managing its content, metadata, and file operations.
+/// </summary>
 public class Note
 {
+    /// <summary>
+    /// Gets or sets the title of the note, extracted from the first H1 heading (# Title).
+    /// </summary>
+    /// <value>The note's title, or null if no H1 heading is found.</value>
     public string? Title { get; set; } = null;
+    
+    /// <summary>
+    /// Gets or sets the full filesystem path to the note file.
+    /// </summary>
+    /// <value>The absolute path to the note file.</value>
     public string Path { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the filename portion of the path.
+    /// </summary>
+    /// <value>The filename without the directory path.</value>
     public string Filename { get; set; }
+    
+    /// <summary>
+    /// Gets the unique identifier for the note, stored in YAML frontmatter.
+    /// Automatically generates a new GUID if not present.
+    /// </summary>
+    /// <value>A string containing the note's unique identifier.</value>
     public string ID
     {
         get
@@ -23,6 +46,12 @@ public class Note
             return Frontmatter[IdKey]!.FirstOrDefault()!;
         }
     }
+    
+    /// <summary>
+    /// Gets the MD5 hash of the note's content, stored in YAML frontmatter.
+    /// Used to detect changes when the file is modified externally.
+    /// </summary>
+    /// <value>A string containing the MD5 hash of the note's content.</value>
     public string Hash
     {
         get
@@ -34,9 +63,29 @@ public class Note
             return Frontmatter[HashKey]!.FirstOrDefault()!;
         }
     }
+    
+    /// <summary>
+    /// Gets or sets the YAML frontmatter stored as key-value pairs.
+    /// Values are stored as lists to support multi-value YAML fields.
+    /// </summary>
+    /// <value>A dictionary containing the note's frontmatter data.</value>
     public Dictionary<string, List<string>?> Frontmatter = new();
+    
+    /// <summary>
+    /// Gets or sets the collection of tags found in the note (both in frontmatter and inline).
+    /// </summary>
+    /// <value>A list of tags associated with the note.</value>
     public List<string> Tags = new();
 
+    /// <summary>
+    /// Gets or sets the main content of the note (everything after the frontmatter).
+    /// Implements lazy loading - content is only read when accessed.
+    /// </summary>
+    /// <value>The note's body content as a string.</value>
+    /// <remarks>
+    /// Setting this property automatically saves changes to disk.
+    /// The content is cached after first access to avoid repeated file reads.
+    /// </remarks>
     public string Body
     {
         get
@@ -55,11 +104,32 @@ public class Note
         }
     }
 
+    /// <summary>
+    /// Cache for the note's content to avoid repeated file reads.
+    /// </summary>
     private string? bodyCache = null;
 
+    /// <summary>
+    /// The key used for storing the content hash in frontmatter.
+    /// </summary>
     const string HashKey = "hash";
+
+    /// <summary>
+    /// The key used for storing the unique identifier in frontmatter.
+    /// </summary>
     const string IdKey = "guid";
 
+    /// <summary>
+    /// Initializes a new instance of the Note class from a file path.
+    /// </summary>
+    /// <param name="path">The filesystem path to the note file.</param>
+    /// <remarks>
+    /// The constructor performs several initialization steps:
+    /// - Reads and parses the file content
+    /// - Extracts title, frontmatter, and tags
+    /// - Ensures presence of unique ID and content hash
+    /// - Outputs debug information about the note
+    /// </remarks>
     public Note(string path)
     {
         string[] lines = System.IO.File.ReadAllLines(path);
@@ -68,10 +138,12 @@ public class Note
         Path = path;
         Filename = System.IO.Path.GetFileName(path);
         Frontmatter = ExtractFrontMatter(lines);
+        
         if (!Frontmatter.ContainsKey(IdKey) || Frontmatter[IdKey]!.FirstOrDefault() == null)
         {
             InsertGUID();
         }
+        
         if (Frontmatter.ContainsKey(HashKey))
         {
             ValidateHash();
@@ -92,6 +164,10 @@ public class Note
         }
     }
 
+    /// <summary>
+    /// Reloads the note from disk, optionally with a new path.
+    /// </summary>
+    /// <param name="path">Optional new path for the note. If empty, uses existing path.</param>
     public void Reload(string path = "")
     {
         if(path != "")
@@ -127,6 +203,13 @@ public class Note
         }
     }
 
+    /// <summary>
+    /// Saves changes back to the file.
+    /// </summary>
+    /// <remarks>
+    /// Updates the modification date in frontmatter if present.
+    /// Reconstructs the file with updated frontmatter and content.
+    /// </remarks>
     internal void Save()
     {
         if (bodyCache == null) { bodyCache = GetBody(Path); }
@@ -167,6 +250,11 @@ public class Note
         ValidateHash();
     }
 
+    /// <summary>
+    /// Extracts the note body content from the file.
+    /// </summary>
+    /// <param name="path">The path to the note file.</param>
+    /// <returns>The body content of the note as a string.</returns>
     private string GetBody(string path)
     {
         string[] lines = System.IO.File.ReadAllLines(path);
@@ -197,6 +285,10 @@ public class Note
         return result;
     }
 
+    /// <summary>
+    /// Validates and updates the content hash if needed.
+    /// </summary>
+    /// <returns>True if hash is valid, false if it needed updating.</returns>
     private bool ValidateHash()
     {
         string[] lines = System.IO.File.ReadAllLines(Path);
@@ -220,6 +312,10 @@ public class Note
         return false;
     }
 
+    /// <summary>
+    /// Creates initial content hash in frontmatter.
+    /// </summary>
+    /// <returns>The generated hash string, or null if operation fails.</returns>
     private string? InsertHash()
     {
         string[] lines = System.IO.File.ReadAllLines(Path);
@@ -237,6 +333,11 @@ public class Note
         return hash;
     }
 
+    /// <summary>
+    /// Generates MD5 hash of note content.
+    /// </summary>
+    /// <param name="lines">Array of lines from the note file.</param>
+    /// <returns>Base64 encoded MD5 hash of the content.</returns>
     private string GenerateHash(string[] lines)
     {
         string result = "error";
@@ -269,6 +370,12 @@ public class Note
         return result;
     }
 
+    /// <summary>
+    /// Extracts tags from both frontmatter and inline content.
+    /// </summary>
+    /// <param name="lines">Array of lines from the note file.</param>
+    /// <param name="frontmatter">Optional frontmatter dictionary to check for tags.</param>
+    /// <returns>A list of all unique tags found in the note.</returns>
     private List<string> ExtractTags(string[] lines, Dictionary<string, List<string>?>? frontmatter = null)
     {
         List<string> tags = new();
@@ -312,6 +419,14 @@ public class Note
         return tags;
     }
 
+    /// <summary>
+    /// Processes hierarchical tags (e.g., "folder/subfolder").
+    /// </summary>
+    /// <param name="tags">List of raw tags to process.</param>
+    /// <returns>List of expanded hierarchical tags.</returns>
+    /// <remarks>
+    /// For a tag like "folder/subfolder", generates both "folder" and "folder/subfolder" tags.
+    /// </remarks>
     private static List<string> DigestTags(List<string> tags)
     {
         List<string> expanded = new();
@@ -334,6 +449,10 @@ public class Note
         return expanded.Distinct().ToList();
     }
 
+    /// <summary>
+    /// Creates and inserts a new GUID in frontmatter.
+    /// </summary>
+    /// <returns>The newly generated GUID string.</returns>
     private string InsertGUID()
     {
         if (Frontmatter.ContainsKey(IdKey) && Frontmatter[IdKey] != null)
@@ -355,6 +474,11 @@ public class Note
         return id;
     }
 
+    /// <summary>
+    /// Parses YAML frontmatter from the file.
+    /// </summary>
+    /// <param name="lines">Array of lines from the note file.</param>
+    /// <returns>Dictionary containing parsed frontmatter key-value pairs.</returns>
     private Dictionary<string, List<string>?> ExtractFrontMatter(string[] lines)
     {
         Dictionary<string, List<string>?> result = new();
@@ -412,6 +536,11 @@ public class Note
         return result;
     }
 
+    /// <summary>
+    /// Extracts the title from the first H1 heading.
+    /// </summary>
+    /// <param name="lines">Array of lines from the note file.</param>
+    /// <returns>The title string if found, null otherwise.</returns>
     private string? ExtractTitle(string[] lines)
     {
         foreach (var line in lines)
@@ -425,6 +554,4 @@ public class Note
 
         return null;
     }
-
-    
 }
