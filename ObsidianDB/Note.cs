@@ -469,48 +469,217 @@ public class Note
     /// Validates and updates the content hash if needed.
     /// </summary>
     /// <returns>True if hash is valid, false if it needed updating.</returns>
+    /// <exception cref="FileNotFoundException">Thrown when the note file is not found.</exception>
+    /// <exception cref="IOException">Thrown when there's an error reading or writing the file.</exception>
     private bool ValidateHash()
     {
-        string[] lines = System.IO.File.ReadAllLines(Path);
-        string calculatedHash = GenerateHash(lines);
-
-        if (Hash == calculatedHash) { return true; }
-
-        // Update Hash
-        _logger.LogInformation("Updating hash to {Hash}", calculatedHash);
-        int index = 0;
-        while (index < lines.Length && !lines[index].StartsWith($"{HashKey}:")) // Looking for hash YAML tag
+        try
         {
-            index++;
+            _logger.LogDebug("Validating hash for note {Path}", Path);
+
+            // Read current content and calculate hash
+            string[] lines = File.ReadAllLines(Path);
+            string calculatedHash = GenerateHash(lines);
+
+            // Check if hash is already valid
+            if (Hash == calculatedHash)
+            {
+                _logger.LogDebug("Hash is valid for note {Path}", Path);
+                return true;
+            }
+
+            // Hash needs updating
+            _logger.LogInformation("Updating hash for note {Path}", Path);
+
+            // Create backup of current content
+            string backupPath = Path + ".bak";
+            File.Copy(Path, backupPath, true);
+
+            try
+            {
+                // Find the hash line in frontmatter
+                int startIndex = Array.FindIndex(lines, line => line.Trim() == "---");
+                if (startIndex == -1)
+                {
+                    throw new InvalidOperationException("Note does not contain valid frontmatter");
+                }
+
+                int endIndex = Array.FindIndex(lines, startIndex + 1, line => line.Trim() == "---");
+                if (endIndex == -1)
+                {
+                    throw new InvalidOperationException("Note does not contain valid frontmatter");
+                }
+
+                // Find the hash line within frontmatter
+                int hashIndex = Array.FindIndex(lines, startIndex, endIndex - startIndex, 
+                    line => line.TrimStart().StartsWith($"{HashKey}:"));
+
+                // Prepare updated lines
+                var updatedLines = new List<string>(lines);
+                string hashLine = $"{HashKey}: {calculatedHash}";
+
+                if (hashIndex != -1)
+                {
+                    // Update existing hash line
+                    updatedLines[hashIndex] = hashLine;
+                }
+                else
+                {
+                    // Insert new hash line before the closing ---
+                    updatedLines.Insert(endIndex, hashLine);
+                }
+
+                // Write to temporary file first
+                string tempPath = Path + ".tmp";
+                File.WriteAllLines(tempPath, updatedLines);
+
+                // Atomic move operation
+                File.Move(tempPath, Path, true);
+
+                // Update frontmatter
+                Frontmatter[HashKey] = [calculatedHash];
+
+                // Notify subscribers of the update
+                ObsidianDB.GetDatabaseInstance(Path)?.callbackManager.EnqueueUpdate(ID);
+
+                _logger.LogInformation("Hash updated successfully for note {Path}", Path);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                // Restore from backup if available
+                if (File.Exists(backupPath))
+                {
+                    try
+                    {
+                        File.Move(backupPath, Path, true);
+                        _logger.LogWarning("Restored note from backup after failed hash update: {Path}", Path);
+                    }
+                    catch (Exception restoreEx)
+                    {
+                        _logger.LogError(restoreEx, "Failed to restore note from backup: {Path}", Path);
+                    }
+                }
+                throw;
+            }
+            finally
+            {
+                // Clean up backup file
+                if (File.Exists(backupPath))
+                {
+                    try
+                    {
+                        File.Delete(backupPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to delete backup file: {Path}", backupPath);
+                    }
+                }
+            }
         }
-        lines[index] = $"{HashKey}: {calculatedHash}";
-        System.IO.File.WriteAllLines(Path, lines);
-        Frontmatter[HashKey] = [calculatedHash];
-
-        ObsidianDB.GetDatabaseInstance(Path)!.callbackManager.EnqueueUpdate(ID);
-
-        return false;
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating hash for note {Path}: {Message}", Path, ex.Message);
+            throw;
+        }
     }
 
     /// <summary>
     /// Creates initial content hash in frontmatter.
     /// </summary>
-    /// <returns>The generated hash string, or null if operation fails.</returns>
-    private string? InsertHash()
+    /// <returns>The generated hash string.</returns>
+    /// <exception cref="FileNotFoundException">Thrown when the note file is not found.</exception>
+    /// <exception cref="IOException">Thrown when there's an error reading or writing the file.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the note does not contain valid frontmatter.</exception>
+    private string InsertHash()
     {
-        string[] lines = System.IO.File.ReadAllLines(Path);
-        string hash = GenerateHash(lines);
-
-        int index = 0;
-        while (index < lines.Length && !lines[index].StartsWith("---")) // Looking for start of YAML block
+        try
         {
-            index++;
-        }
-        lines[index] += $"\n{HashKey}: {hash}";
-        System.IO.File.WriteAllLines(Path, lines);
+            _logger.LogInformation("Inserting initial hash for note {Path}", Path);
 
-        Frontmatter.Add(HashKey, [hash]);
-        return hash;
+            // Read current content and calculate hash
+            string[] lines = File.ReadAllLines(Path);
+            string hash = GenerateHash(lines);
+
+            // Create backup of current content
+            string backupPath = Path + ".bak";
+            File.Copy(Path, backupPath, true);
+
+            try
+            {
+                // Find the frontmatter boundaries
+                int startIndex = Array.FindIndex(lines, line => line.Trim() == "---");
+                if (startIndex == -1)
+                {
+                    throw new InvalidOperationException("Note does not contain valid frontmatter");
+                }
+
+                int endIndex = Array.FindIndex(lines, startIndex + 1, line => line.Trim() == "---");
+                if (endIndex == -1)
+                {
+                    throw new InvalidOperationException("Note does not contain valid frontmatter");
+                }
+
+                // Prepare updated lines with hash inserted before the closing ---
+                var updatedLines = new List<string>(lines);
+                string hashLine = $"{HashKey}: {hash}";
+                updatedLines.Insert(endIndex, hashLine);
+
+                // Write to temporary file first
+                string tempPath = Path + ".tmp";
+                File.WriteAllLines(tempPath, updatedLines);
+
+                // Atomic move operation
+                File.Move(tempPath, Path, true);
+
+                // Update frontmatter
+                Frontmatter.Add(HashKey, [hash]);
+
+                // Notify subscribers of the update
+                ObsidianDB.GetDatabaseInstance(Path)?.callbackManager.EnqueueUpdate(ID);
+
+                _logger.LogInformation("Hash inserted successfully for note {Path}", Path);
+                return hash;
+            }
+            catch (Exception ex)
+            {
+                // Restore from backup if available
+                if (File.Exists(backupPath))
+                {
+                    try
+                    {
+                        File.Move(backupPath, Path, true);
+                        _logger.LogWarning("Restored note from backup after failed hash insertion: {Path}", Path);
+                    }
+                    catch (Exception restoreEx)
+                    {
+                        _logger.LogError(restoreEx, "Failed to restore note from backup: {Path}", Path);
+                    }
+                }
+                throw;
+            }
+            finally
+            {
+                // Clean up backup file
+                if (File.Exists(backupPath))
+                {
+                    try
+                    {
+                        File.Delete(backupPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to delete backup file: {Path}", backupPath);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error inserting hash for note {Path}: {Message}", Path, ex.Message);
+            throw;
+        }
     }
 
     /// <summary>
