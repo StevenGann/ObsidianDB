@@ -13,6 +13,8 @@ namespace ObsidianDB;
 
 /// <summary>
 /// Represents a Markdown note file in an Obsidian vault, managing its content, metadata, and file operations.
+/// This class handles the lifecycle of a note including loading, saving, and maintaining metadata like title,
+/// tags, and unique identifiers. It ensures data integrity through atomic file operations and hash validation.
 /// </summary>
 public class Note
 {
@@ -20,18 +22,22 @@ public class Note
     
     /// <summary>
     /// Gets or sets the title of the note, extracted from the first H1 heading (# Title).
+    /// If no H1 heading is found, falls back to the filename without extension.
     /// </summary>
-    /// <value>The note's title, or null if no H1 heading is found.</value>
+    /// <value>The note's title, or null if no H1 heading is found and filename is not available.</value>
     public string? Title { get; set; } = null;
     
     /// <summary>
     /// Gets or sets the full filesystem path to the note file.
+    /// The path must be within the Obsidian vault directory.
     /// </summary>
     /// <value>The absolute path to the note file.</value>
+    /// <exception cref="ArgumentException">Thrown when the path is outside the vault directory.</exception>
     public string Path { get; set; }
     
     /// <summary>
     /// Gets or sets the filename portion of the path.
+    /// This is automatically updated when the Path property changes.
     /// </summary>
     /// <value>The filename without the directory path.</value>
     public string Filename { get; set; }
@@ -39,8 +45,10 @@ public class Note
     /// <summary>
     /// Gets the unique identifier for the note, stored in YAML frontmatter.
     /// Automatically generates a new GUID if not present.
+    /// The GUID is used for tracking note changes and maintaining relationships between notes.
     /// </summary>
-    /// <value>A string containing the note's unique identifier.</value>
+    /// <value>A string containing the note's unique identifier in GUID format.</value>
+    /// <exception cref="InvalidOperationException">Thrown when the note does not contain valid frontmatter.</exception>
     public string ID
     {
         get
@@ -56,8 +64,10 @@ public class Note
     /// <summary>
     /// Gets the MD5 hash of the note's content, stored in YAML frontmatter.
     /// Used to detect changes when the file is modified externally.
+    /// The hash is calculated from the note's content only, excluding the YAML frontmatter.
     /// </summary>
-    /// <value>A string containing the MD5 hash of the note's content.</value>
+    /// <value>A string containing the Base64 encoded MD5 hash of the note's content.</value>
+    /// <exception cref="InvalidOperationException">Thrown when the note does not contain valid frontmatter.</exception>
     public string Hash
     {
         get
@@ -73,24 +83,28 @@ public class Note
     /// <summary>
     /// Gets or sets the YAML frontmatter stored as key-value pairs.
     /// Values are stored as lists to support multi-value YAML fields.
+    /// The frontmatter is automatically synchronized with the file on save.
     /// </summary>
-    /// <value>A dictionary containing the note's frontmatter data.</value>
+    /// <value>A dictionary containing the note's frontmatter data, where keys are strings and values are lists of strings.</value>
     public Dictionary<string, List<string>?> Frontmatter = new();
     
     /// <summary>
     /// Gets or sets the collection of tags found in the note (both in frontmatter and inline).
+    /// Tags are automatically extracted from both the frontmatter and the note's content.
+    /// Inline tags are identified by the # symbol followed by non-whitespace characters.
     /// </summary>
-    /// <value>A list of tags associated with the note.</value>
+    /// <value>A list of unique tags associated with the note.</value>
     public List<string> Tags = new();
 
     /// <summary>
     /// Gets or sets the main content of the note (everything after the frontmatter).
     /// Implements lazy loading - content is only read when accessed.
     /// </summary>
-    /// <value>The note's body content as a string.</value>
+    /// <value>The note's body content as a string, excluding the YAML frontmatter.</value>
     /// <remarks>
     /// Setting this property automatically saves changes to disk.
     /// The content is cached after first access to avoid repeated file reads.
+    /// Changes to the content are tracked through the Hash property.
     /// </remarks>
     public string Body
     {
@@ -112,29 +126,36 @@ public class Note
 
     /// <summary>
     /// Cache for the note's content to avoid repeated file reads.
+    /// This cache is invalidated when the note is reloaded or when the content is modified.
     /// </summary>
     private string? bodyCache = null;
 
     /// <summary>
     /// The key used for storing the content hash in frontmatter.
+    /// This key is used to maintain data integrity and detect external changes.
     /// </summary>
     const string HashKey = "hash";
 
     /// <summary>
     /// The key used for storing the unique identifier in frontmatter.
+    /// This key is used to maintain relationships between notes and track changes.
     /// </summary>
     const string IdKey = "guid";
 
     /// <summary>
     /// Initializes a new instance of the Note class from a file path.
     /// </summary>
-    /// <param name="path">The filesystem path to the note file.</param>
+    /// <param name="path">The filesystem path to the note file. Must be within the Obsidian vault directory.</param>
+    /// <exception cref="FileNotFoundException">Thrown when the note file is not found at the specified path.</exception>
+    /// <exception cref="ArgumentException">Thrown when the path is invalid or outside the vault directory.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the note does not contain valid frontmatter.</exception>
     /// <remarks>
     /// The constructor performs several initialization steps:
     /// - Reads and parses the file content
     /// - Extracts title, frontmatter, and tags
     /// - Ensures presence of unique ID and content hash
     /// - Outputs debug information about the note
+    /// The note is immediately ready for use after construction.
     /// </remarks>
     public Note(string path)
     {
@@ -164,10 +185,21 @@ public class Note
 
     /// <summary>
     /// Reloads the note from disk, optionally with a new path.
+    /// This method preserves the note's state in case of failure and provides detailed error information.
     /// </summary>
-    /// <param name="path">Optional new path for the note. If empty, uses existing path.</param>
+    /// <param name="path">Optional new path for the note. If empty, uses existing path.
+    /// The new path must be within the vault directory.</param>
     /// <exception cref="FileNotFoundException">Thrown when the note file is not found.</exception>
     /// <exception cref="ArgumentException">Thrown when the new path is invalid or outside the vault.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the note does not contain valid frontmatter.</exception>
+    /// <remarks>
+    /// This method performs the following operations:
+    /// - Validates the new path if provided
+    /// - Creates a backup of the current state
+    /// - Reloads the note content and metadata
+    /// - Restores the backup if any operation fails
+    /// - Notifies subscribers of the reload
+    /// </remarks>
     public void Reload(string path = "")
     {
         try
@@ -254,15 +286,21 @@ public class Note
 
     /// <summary>
     /// Saves changes back to the file.
+    /// This method ensures data integrity through atomic file operations and backup mechanisms.
     /// </summary>
-    /// <remarks>
-    /// Updates the modification date in frontmatter if present.
-    /// Reconstructs the file with updated frontmatter and content.
-    /// Uses atomic write operation to prevent file corruption.
-    /// </remarks>
     /// <exception cref="FileNotFoundException">Thrown when the note file is not found.</exception>
     /// <exception cref="UnauthorizedAccessException">Thrown when there's no permission to write to the file.</exception>
     /// <exception cref="IOException">Thrown when there's an error writing to the file.</exception>
+    /// <exception cref="ArgumentException">Thrown when the path is invalid.</exception>
+    /// <remarks>
+    /// The save operation:
+    /// - Updates the modification date in frontmatter if present
+    /// - Reconstructs the file with updated frontmatter and content
+    /// - Uses atomic write operation to prevent file corruption
+    /// - Creates a backup before saving
+    /// - Validates the saved content
+    /// - Cleans up temporary files
+    /// </remarks>
     internal void Save()
     {
         try
@@ -385,12 +423,20 @@ public class Note
 
     /// <summary>
     /// Extracts the note body content from the file.
+    /// This method handles various edge cases including missing or invalid frontmatter.
     /// </summary>
-    /// <param name="path">The path to the note file.</param>
-    /// <returns>The body content of the note as a string.</returns>
+    /// <param name="path">The path to the note file. Must be a valid path within the vault.</param>
+    /// <returns>The body content of the note as a string, excluding the YAML frontmatter.</returns>
     /// <exception cref="FileNotFoundException">Thrown when the note file is not found.</exception>
     /// <exception cref="IOException">Thrown when there's an error reading the file.</exception>
     /// <exception cref="ArgumentException">Thrown when the path is invalid.</exception>
+    /// <remarks>
+    /// The method:
+    /// - Handles files without frontmatter
+    /// - Handles files with invalid frontmatter
+    /// - Uses efficient string concatenation
+    /// - Preserves line endings
+    /// </remarks>
     private string GetBody(string path)
     {
         try
@@ -467,10 +513,20 @@ public class Note
 
     /// <summary>
     /// Validates and updates the content hash if needed.
+    /// This method ensures the hash in the frontmatter matches the actual content.
     /// </summary>
     /// <returns>True if hash is valid, false if it needed updating.</returns>
     /// <exception cref="FileNotFoundException">Thrown when the note file is not found.</exception>
     /// <exception cref="IOException">Thrown when there's an error reading or writing the file.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the note does not contain valid frontmatter.</exception>
+    /// <remarks>
+    /// The validation process:
+    /// - Calculates the current content hash
+    /// - Compares it with the stored hash
+    /// - Updates the hash if they don't match
+    /// - Uses atomic file operations
+    /// - Creates a backup before updating
+    /// </remarks>
     private bool ValidateHash()
     {
         try
@@ -587,11 +643,19 @@ public class Note
 
     /// <summary>
     /// Creates initial content hash in frontmatter.
+    /// This method is called when a note is first loaded without a hash.
     /// </summary>
-    /// <returns>The generated hash string.</returns>
+    /// <returns>The generated hash string in Base64 format.</returns>
     /// <exception cref="FileNotFoundException">Thrown when the note file is not found.</exception>
     /// <exception cref="IOException">Thrown when there's an error reading or writing the file.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the note does not contain valid frontmatter.</exception>
+    /// <remarks>
+    /// The insertion process:
+    /// - Calculates the content hash
+    /// - Inserts it into the frontmatter
+    /// - Uses atomic file operations
+    /// - Creates a backup before updating
+    /// </remarks>
     private string InsertHash()
     {
         try
@@ -684,12 +748,17 @@ public class Note
 
     /// <summary>
     /// Generates MD5 hash of note content, excluding the YAML frontmatter.
+    /// This method ensures consistent hashing across different platforms and file systems.
     /// </summary>
     /// <param name="lines">Array of lines from the note file.</param>
     /// <returns>Base64 encoded MD5 hash of the content.</returns>
     /// <remarks>
     /// The hash is calculated from the note's content only, excluding the YAML frontmatter.
     /// This ensures that updating the hash in the frontmatter doesn't change the hash itself.
+    /// The method handles various edge cases:
+    /// - Files without frontmatter
+    /// - Files with invalid frontmatter
+    /// - Empty files
     /// </remarks>
     private string GenerateHash(string[] lines)
     {
@@ -724,9 +793,17 @@ public class Note
 
     /// <summary>
     /// Calculates the MD5 hash of the given lines.
+    /// This method uses UTF-8 encoding and handles line endings consistently.
     /// </summary>
-    /// <param name="lines">Array of lines to hash.</param>
+    /// <param name="lines">Array of lines to hash. Empty arrays are handled gracefully.</param>
     /// <returns>Base64 encoded MD5 hash of the content.</returns>
+    /// <remarks>
+    /// The method:
+    /// - Uses UTF-8 encoding for consistent results
+    /// - Handles line endings properly
+    /// - Processes all lines in a single operation
+    /// - Returns a Base64 encoded string for safe storage
+    /// </remarks>
     private static string CalculateContentHash(string[] lines)
     {
         using var md5 = MD5.Create();
@@ -741,16 +818,18 @@ public class Note
 
     /// <summary>
     /// Extracts tags from both frontmatter and inline content.
+    /// This method handles hierarchical tags and ensures uniqueness.
     /// </summary>
     /// <param name="lines">Array of lines from the note file.</param>
     /// <param name="frontmatter">Optional frontmatter dictionary to check for tags.</param>
-    /// <returns>A list of all unique tags found in the note.</returns>
+    /// <returns>A list of all unique tags found in the note, including hierarchical tags.</returns>
     /// <remarks>
     /// Tags can be found in two places:
     /// 1. In the frontmatter under the "tags" key
     /// 2. In the body as inline tags (e.g., #tag)
     /// 
     /// Note that "# keyword" is a heading, while "#keyword" is a tag.
+    /// The method handles hierarchical tags (e.g., "topic/sub-topic") by expanding them.
     /// </remarks>
     private List<string> ExtractTags(string[] lines, Dictionary<string, List<string>?>? frontmatter = null)
     {
@@ -832,11 +911,17 @@ public class Note
 
     /// <summary>
     /// Processes hierarchical tags (e.g., "topic/sub-topic").
+    /// This method expands hierarchical tags into their full paths.
     /// </summary>
-    /// <param name="tags">List of raw tags to process.</param>
-    /// <returns>List of expanded hierarchical tags.</returns>
+    /// <param name="tags">List of raw tags to process. May contain hierarchical tags.</param>
+    /// <returns>List of expanded hierarchical tags, including all parent tags.</returns>
     /// <remarks>
     /// For a tag like "topic/sub-topic", generates both "topic" and "topic/sub-topic" tags.
+    /// The method:
+    /// - Handles both forward and backward slashes
+    /// - Removes empty segments
+    /// - Ensures uniqueness
+    /// - Preserves the original tags
     /// </remarks>
     private static List<string> DigestTags(List<string> tags)
     {
@@ -867,11 +952,21 @@ public class Note
 
     /// <summary>
     /// Creates and inserts a new GUID in frontmatter.
+    /// This method ensures each note has a unique identifier.
     /// </summary>
     /// <returns>The newly generated GUID string.</returns>
     /// <exception cref="FileNotFoundException">Thrown when the note file is not found.</exception>
     /// <exception cref="IOException">Thrown when there's an error reading or writing the file.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the note does not contain valid frontmatter.</exception>
+    /// <remarks>
+    /// The insertion process:
+    /// - Checks if a GUID already exists
+    /// - Generates a new GUID if needed
+    /// - Inserts it into the frontmatter
+    /// - Uses atomic file operations
+    /// - Creates a backup before updating
+    /// - Notifies subscribers of the update
+    /// </remarks>
     private string InsertGUID()
     {
         try
@@ -975,6 +1070,7 @@ public class Note
 
     /// <summary>
     /// Parses YAML frontmatter from the file using YamlDotNet for robust YAML parsing.
+    /// This method handles various YAML formats and edge cases.
     /// </summary>
     /// <param name="lines">Array of lines from the note file.</param>
     /// <returns>Dictionary containing parsed frontmatter key-value pairs.</returns>
@@ -985,6 +1081,11 @@ public class Note
     /// - Multi-line strings
     /// - Different value types (strings, numbers, booleans)
     /// - Lists and dictionaries
+    /// 
+    /// The method handles various edge cases:
+    /// - Missing frontmatter
+    /// - Invalid frontmatter
+    /// - Empty frontmatter
     /// </remarks>
     private Dictionary<string, List<string>?> ExtractFrontMatter(string[] lines)
     {
@@ -1045,9 +1146,17 @@ public class Note
 
     /// <summary>
     /// Extracts the title from the first H1 heading or falls back to the filename without extension.
+    /// This method ensures every note has a title, even if no H1 heading is present.
     /// </summary>
     /// <param name="lines">Array of lines from the note file.</param>
     /// <returns>The title string if found, or the filename without extension as fallback.</returns>
+    /// <remarks>
+    /// The method:
+    /// - Looks for the first H1 heading (# followed by space)
+    /// - Falls back to filename without extension if no H1 found
+    /// - Trims whitespace from the title
+    /// - Handles empty files gracefully
+    /// </remarks>
     private string? ExtractTitle(string[] lines)
     {
         // First try to find an H1 heading
