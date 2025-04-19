@@ -258,45 +258,129 @@ public class Note
     /// <remarks>
     /// Updates the modification date in frontmatter if present.
     /// Reconstructs the file with updated frontmatter and content.
+    /// Uses atomic write operation to prevent file corruption.
     /// </remarks>
+    /// <exception cref="FileNotFoundException">Thrown when the note file is not found.</exception>
+    /// <exception cref="UnauthorizedAccessException">Thrown when there's no permission to write to the file.</exception>
+    /// <exception cref="IOException">Thrown when there's an error writing to the file.</exception>
     internal void Save()
     {
-        if (bodyCache == null) { bodyCache = GetBody(Path); }
-        List<string> document = new();
-
-        if (Frontmatter.ContainsKey("date modified") && Frontmatter["date modified"] != null)
+        try
         {
-            string modified = DateTime.Now.ToString("dddd, MMMM d yyyy, h:M:ss tt");
-            Frontmatter["date modified"] = [modified];
-        }
+            _logger.LogInformation("Saving note {Path}", Path);
 
-        // Assemble frontmatter
-        document.Add("---");
-        foreach (string key in Frontmatter.Keys)
-        {
-            if (Frontmatter[key] == null)
+            // Validate file path
+            if (string.IsNullOrWhiteSpace(Path))
             {
-                document.Add($"{key}:");
+                throw new ArgumentException("Note path cannot be empty", nameof(Path));
             }
-            else if (Frontmatter[key]!.Count == 1)
+
+            // Ensure directory exists
+            string directory = System.IO.Path.GetDirectoryName(Path)!;
+            if (!Directory.Exists(directory))
             {
-                document.Add($"{key}: {Frontmatter[key]![0]}");
+                Directory.CreateDirectory(directory);
             }
-            else if (Frontmatter[key]!.Count > 1)
+
+            // Create backup of current content
+            string backupPath = Path + ".bak";
+            if (File.Exists(Path))
             {
-                document.Add($"{key}:");
-                foreach (string value in Frontmatter[key]!)
+                File.Copy(Path, backupPath, true);
+            }
+
+            try
+            {
+                // Get current content if not cached
+                if (bodyCache == null)
                 {
-                    document.Add($"  - {value}");
+                    bodyCache = GetBody(Path);
+                }
+
+                // Update modification date if present
+                if (Frontmatter.ContainsKey("date modified") && Frontmatter["date modified"] != null)
+                {
+                    string modified = DateTime.Now.ToString("dddd, MMMM d yyyy, h:M:ss tt");
+                    Frontmatter["date modified"] = [modified];
+                }
+
+                // Build document content
+                List<string> document = new();
+                document.Add("---");
+
+                // Add frontmatter
+                foreach (string key in Frontmatter.Keys)
+                {
+                    if (Frontmatter[key] == null)
+                    {
+                        document.Add($"{key}:");
+                    }
+                    else if (Frontmatter[key]!.Count == 1)
+                    {
+                        document.Add($"{key}: {Frontmatter[key]![0]}");
+                    }
+                    else if (Frontmatter[key]!.Count > 1)
+                    {
+                        document.Add($"{key}:");
+                        foreach (string value in Frontmatter[key]!)
+                        {
+                            document.Add($"  - {value}");
+                        }
+                    }
+                }
+                document.Add("---");
+                document.Add(bodyCache);
+
+                // Write to temporary file first
+                string tempPath = Path + ".tmp";
+                File.WriteAllLines(tempPath, document);
+
+                // Atomic move operation
+                File.Move(tempPath, Path, true);
+
+                // Validate the saved content
+                ValidateHash();
+
+                _logger.LogInformation("Note saved successfully: {Path}", Path);
+            }
+            catch (Exception ex)
+            {
+                // Restore from backup if available
+                if (File.Exists(backupPath))
+                {
+                    try
+                    {
+                        File.Move(backupPath, Path, true);
+                        _logger.LogWarning("Restored note from backup after failed save: {Path}", Path);
+                    }
+                    catch (Exception restoreEx)
+                    {
+                        _logger.LogError(restoreEx, "Failed to restore note from backup: {Path}", Path);
+                    }
+                }
+                throw;
+            }
+            finally
+            {
+                // Clean up temporary files
+                if (File.Exists(backupPath))
+                {
+                    try
+                    {
+                        File.Delete(backupPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to delete backup file: {Path}", backupPath);
+                    }
                 }
             }
         }
-        document.Add("---");
-
-        document.Add(bodyCache);
-
-        System.IO.File.WriteAllLines(Path, document.ToArray());
-        ValidateHash();
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving note {Path}: {Message}", Path, ex.Message);
+            throw;
+        }
     }
 
     /// <summary>
