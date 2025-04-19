@@ -1,12 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using Microsoft.Extensions.Logging;
+using ObsidianDB.Logging;
 
 namespace ObsidianDB;
 
 public class SyncManager
 {
-    private FileSystemWatcher? watcher;
+    private readonly ILogger<SyncManager> _logger = LoggerService.GetLogger<SyncManager>();
+    private readonly FileSystemWatcher watcher;
+    private readonly string vaultPath;
+    private readonly HashSet<string> lockedPaths = new();
     private ObsidianDB? DB;
 
     string lockedPath = "";
@@ -68,6 +74,14 @@ public class SyncManager
 
     private void OnChanged(object sender, FileSystemEventArgs e)
     {
+        if (lockedPaths.Contains(e.FullPath)) return;
+
+        _logger.LogInformation("Changed: {Path}", e.FullPath);
+        _logger.LogDebug("Locked paths: {Paths}", string.Join(", ", lockedPaths));
+        
+        string value = System.IO.File.ReadAllText(e.FullPath);
+        _logger.LogDebug("File contents: {Content}", value);
+
         if (e.ChangeType != WatcherChangeTypes.Changed)
         {
             return;
@@ -84,11 +98,19 @@ public class SyncManager
         Console.WriteLine(value);
     }
 
-    private void OnDeleted(object sender, FileSystemEventArgs e) =>
+    private void OnDeleted(object sender, FileSystemEventArgs e)
+    {
+        if (lockedPaths.Contains(e.FullPath)) return;
+
+        _logger.LogInformation("Deleted: {Path}", e.FullPath);
         Console.WriteLine($"Deleted: {e.FullPath}");
+    }
 
     private void OnRenamed(object sender, RenamedEventArgs e)
     {
+        if (lockedPaths.Contains(e.OldFullPath)) return;
+
+        _logger.LogInformation("Renamed:\n    Old: {OldPath}\n    New: {NewPath}", e.OldFullPath, e.FullPath);
         Console.WriteLine($"Renamed:");
         Console.WriteLine($"    Old: {e.OldFullPath}");
         Console.WriteLine($"    New: {e.FullPath}");

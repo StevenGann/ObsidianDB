@@ -4,6 +4,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Markdig.Helpers;
+using Microsoft.Extensions.Logging;
+using ObsidianDB.Logging;
 using YamlDotNet.Serialization;
 
 namespace ObsidianDB;
@@ -13,6 +15,8 @@ namespace ObsidianDB;
 /// </summary>
 public class Note
 {
+    private readonly ILogger<Note> _logger = LoggerService.GetLogger<Note>();
+    
     /// <summary>
     /// Gets or sets the title of the note, extracted from the first H1 heading (# Title).
     /// </summary>
@@ -153,16 +157,8 @@ public class Note
 
         Tags = ExtractTags(lines, Frontmatter);
 
-        Console.WriteLine("========");
-        Console.WriteLine($"{Path}");
-        Console.WriteLine($"Title: {Title}, {Filename}");
-        Console.WriteLine($"{ID}");
-        Console.WriteLine($"{Hash}");
-        Console.WriteLine($"Tags:");
-        foreach (string tag in Tags)
-        {
-            Console.WriteLine($" - #{tag}");
-        }
+        _logger.LogInformation("========\n{Path}\nTitle: {Title}, {Filename}\n{ID}\n{Hash}\nTags:\n{TagList}",
+            Path, Title, Filename, ID, Hash, string.Join("\n", Tags.Select(t => $" - #{t}")));
     }
 
     /// <summary>
@@ -192,16 +188,8 @@ public class Note
 
         Tags = ExtractTags(lines, Frontmatter);
 
-        Console.WriteLine("========");
-        Console.WriteLine($"{Path}");
-        Console.WriteLine($"Title: {Title}, {Filename}");
-        Console.WriteLine($"{ID}");
-        Console.WriteLine($"{Hash}");
-        Console.WriteLine($"Tags:");
-        foreach (string tag in Tags)
-        {
-            Console.WriteLine($" - #{tag}");
-        }
+        _logger.LogInformation("========\n{Path}\nTitle: {Title}, {Filename}\n{ID}\n{Hash}\nTags:\n{TagList}",
+            Path, Title, Filename, ID, Hash, string.Join("\n", Tags.Select(t => $" - #{t}")));
     }
 
     /// <summary>
@@ -298,7 +286,7 @@ public class Note
         if (Hash == calculatedHash) { return true; }
 
         // Update Hash
-        Console.WriteLine("Updating hash to " + calculatedHash);
+        _logger.LogInformation("Updating hash to {Hash}", calculatedHash);
         int index = 0;
         while (index < lines.Length && !lines[index].StartsWith($"{HashKey}:")) // Looking for hash YAML tag
         {
@@ -539,8 +527,7 @@ public class Note
         }
         catch (Exception ex)
         {
-            // Log the error but don't fail - return what we could parse
-            Console.WriteLine($"Error parsing YAML frontmatter: {ex.Message}");
+            _logger.LogError(ex, "Error parsing YAML frontmatter: {Message}", ex.Message);
         }
         
         return result;

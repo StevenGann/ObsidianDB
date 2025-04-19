@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Principal;
+using Microsoft.Extensions.Logging;
+using ObsidianDB.Logging;
 
 namespace ObsidianDB;
 
 public class ObsidianDB
 {
+    private readonly ILogger<ObsidianDB> _logger = LoggerService.GetLogger<ObsidianDB>();
     public string VaultPath { get; set; }
 
     public List<Note> Notes { get; set; } = new();
@@ -50,12 +53,19 @@ public class ObsidianDB
     public void ScanNotes()
     {
         string[] files = Directory.GetFiles(VaultPath, "*.md", SearchOption.AllDirectories);
-        Console.WriteLine($"Found {files.Length} files");
+        _logger.LogInformation("Found {Count} files", files.Length);
 
         foreach (string file in files)
         {
-            Note note = new(file);
-            Notes.Add(note);
+            try
+            {
+                Note note = new(file);
+                Notes.Add(note);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading note {File}: {Message}", file, ex.Message);
+            }
         }
     }
 

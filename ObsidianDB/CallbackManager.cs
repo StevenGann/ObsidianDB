@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
+using ObsidianDB.Logging;
 
 namespace ObsidianDB;
 
 public class CallbackManager
 {
+    private readonly ILogger<CallbackManager> _logger = LoggerService.GetLogger<CallbackManager>();
     public delegate void Callback(Note note);
 
     private Dictionary<string, List<Callback>> subscriptions = new();
@@ -39,7 +42,7 @@ public class CallbackManager
                 Note? note = DB.GetFromId(id);
                 if (note != null)
                 {
-                    Console.WriteLine($"Triggering {subscriptions[id].Count} callback(s) for {note.Title}");
+                    _logger.LogInformation("Triggering {Count} callback(s) for {Title}", subscriptions[id].Count, note.Title);
                     foreach (Callback callback in subscriptions[id])
                     {
                         callback(note);
@@ -60,5 +63,17 @@ public class CallbackManager
         if (updates.Contains(id)) { return; }
 
         updates.Add(id);
+    }
+
+    public void TriggerCallbacks(Note note)
+    {
+        if (subscriptions.TryGetValue(note.ID, out var callbacks))
+        {
+            _logger.LogInformation("Triggering {Count} callback(s) for {Title}", callbacks.Count, note.Title);
+            foreach (var callback in callbacks)
+            {
+                callback(note);
+            }
+        }
     }
 }
