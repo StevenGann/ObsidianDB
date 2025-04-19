@@ -365,47 +365,89 @@ public class Note
     /// <param name="lines">Array of lines from the note file.</param>
     /// <param name="frontmatter">Optional frontmatter dictionary to check for tags.</param>
     /// <returns>A list of all unique tags found in the note.</returns>
+    /// <remarks>
+    /// Tags can be found in two places:
+    /// 1. In the frontmatter under the "tags" key
+    /// 2. In the body as inline tags (e.g., #tag)
+    /// 
+    /// Note that "# keyword" is a heading, while "#keyword" is a tag.
+    /// </remarks>
     private List<string> ExtractTags(string[] lines, Dictionary<string, List<string>?>? frontmatter = null)
     {
-        List<string> tags = new();
-
-        if (frontmatter != null && frontmatter.ContainsKey("tags") && frontmatter["tags"] != null)
+        HashSet<string> tags = new();
+        
+        // Extract tags from frontmatter
+        if (frontmatter != null && frontmatter.TryGetValue("tags", out var frontmatterTags) && frontmatterTags != null)
         {
-            foreach (string tag in frontmatter["tags"]!)
+            foreach (string tag in frontmatterTags)
             {
-                tags.Add(tag);
-            }
-        }
-
-        int index = 0;
-        while (index < lines.Length && !lines[index].StartsWith("---")) // Looking for start of YAML block
-        {
-            index++;
-        }
-        index += 1;
-        while (index < lines.Length && !lines[index].StartsWith("---")) // Until end of YAML block
-        {
-            index++;
-        }
-
-        while (index < lines.Length) // Until end of file
-        {
-            string[] tokens = lines[index].Split(' ');
-            foreach (string token in tokens)
-            {
-                if (token.Trim().StartsWith("#") && !(token.Trim().StartsWith("##") || token.Trim().EndsWith("#")))
+                if (!string.IsNullOrWhiteSpace(tag))
                 {
-                    string tag = token.Trim(' ', ',', '.', ';', '\t', '\n', '#');
-                    //Console.WriteLine(tag);
-                    tags.Add(tag);
+                    tags.Add(tag.Trim());
                 }
             }
-            index++;
         }
 
-        tags = DigestTags(tags);
+        // Find the end of the frontmatter block
+        int startIndex = Array.FindIndex(lines, line => line.Trim() == "---");
+        if (startIndex != -1)
+        {
+            int endIndex = Array.FindIndex(lines, startIndex + 1, line => line.Trim() == "---");
+            if (endIndex != -1)
+            {
+                // Process the body content after the frontmatter
+                for (int i = endIndex + 1; i < lines.Length; i++)
+                {
+                    string line = lines[i].Trim();
+                    if (string.IsNullOrWhiteSpace(line)) continue;
 
-        return tags;
+                    // Skip if this is a heading (starts with # followed by a space)
+                    if (line.StartsWith("# ")) continue;
+
+                    // Find all potential tags in the line
+                    int tagStart = -1;
+                    for (int j = 0; j < line.Length; j++)
+                    {
+                        if (line[j] == '#')
+                        {
+                            // Check if this is a tag (not a heading)
+                            if (j == 0 || char.IsWhiteSpace(line[j - 1]))
+                            {
+                                tagStart = j;
+                            }
+                        }
+                        else if (tagStart != -1)
+                        {
+                            // End of tag when we hit whitespace or end of line
+                            if (char.IsWhiteSpace(line[j]) || j == line.Length - 1)
+                            {
+                                int length = j - tagStart;
+                                if (j == line.Length - 1) length++; // Include the last character
+                                
+                                string potentialTag = line.Substring(tagStart, length).Trim('#', ' ', '\t', '\n', '\r');
+                                if (!string.IsNullOrWhiteSpace(potentialTag))
+                                {
+                                    tags.Add(potentialTag);
+                                }
+                                tagStart = -1;
+                            }
+                        }
+                    }
+
+                    // Handle case where tag is at the end of the line
+                    if (tagStart != -1)
+                    {
+                        string potentialTag = line.Substring(tagStart).Trim('#', ' ', '\t', '\n', '\r');
+                        if (!string.IsNullOrWhiteSpace(potentialTag))
+                        {
+                            tags.Add(potentialTag);
+                        }
+                    }
+                }
+            }
+        }
+
+        return DigestTags(tags.ToList());
     }
 
     /// <summary>
