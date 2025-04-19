@@ -7,6 +7,7 @@ using Markdig.Helpers;
 using Microsoft.Extensions.Logging;
 using ObsidianDB.Logging;
 using YamlDotNet.Serialization;
+using System.IO;
 
 namespace ObsidianDB;
 
@@ -165,31 +166,90 @@ public class Note
     /// Reloads the note from disk, optionally with a new path.
     /// </summary>
     /// <param name="path">Optional new path for the note. If empty, uses existing path.</param>
+    /// <exception cref="FileNotFoundException">Thrown when the note file is not found.</exception>
+    /// <exception cref="ArgumentException">Thrown when the new path is invalid or outside the vault.</exception>
     public void Reload(string path = "")
     {
-        if(path != "")
+        try
         {
-            Path = path;
-        }
-        string[] lines = System.IO.File.ReadAllLines(Path);
+            _logger.LogInformation("Reloading note {Path}", path);
+            
+            // Validate new path if provided
+            if (!string.IsNullOrEmpty(path))
+            {
+                if (!System.IO.File.Exists(path))
+                {
+                    throw new FileNotFoundException($"Note file not found at path: {path}");
+                }
+                
+                // Verify the new path is within the vault
+                string vaultPath = ObsidianDB.GetDatabaseInstance(Path)?.VaultPath ?? string.Empty;
+                if (!string.IsNullOrEmpty(vaultPath) && !path.StartsWith(vaultPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new ArgumentException($"New path must be within the vault directory: {vaultPath}");
+                }
+                
+                Path = path;
+            }
 
-        Title = ExtractTitle(lines);
-        Filename = System.IO.Path.GetFileName(Path);
-        Frontmatter = ExtractFrontMatter(lines);
-        if (!Frontmatter.ContainsKey(IdKey) || Frontmatter[IdKey]!.FirstOrDefault() == null)
+            // Backup current state
+            var backup = new
+            {
+                Title,
+                Filename,
+                Frontmatter = new Dictionary<string, List<string>?>(Frontmatter),
+                Tags = new List<string>(Tags)
+            };
+
+            try
+            {
+                string[] lines = System.IO.File.ReadAllLines(Path);
+                
+                // Update properties in a specific order
+                Filename = System.IO.Path.GetFileName(Path);
+                Frontmatter = ExtractFrontMatter(lines);
+                Title = ExtractTitle(lines);
+                
+                // Ensure required metadata exists
+                if (!Frontmatter.ContainsKey(IdKey) || Frontmatter[IdKey]!.FirstOrDefault() == null)
+                {
+                    InsertGUID();
+                }
+                
+                if (Frontmatter.ContainsKey(HashKey))
+                {
+                    ValidateHash();
+                }
+                else 
+                { 
+                    InsertHash(); 
+                }
+
+                Tags = ExtractTags(lines, Frontmatter);
+
+                _logger.LogInformation("Note reloaded successfully: {Path}\nTitle: {Title}\nID: {ID}\nHash: {Hash}\nTags: {TagList}",
+                    Path, Title, ID, Hash, string.Join(", ", Tags));
+                    
+                // Notify subscribers of the reload
+                ObsidianDB.GetDatabaseInstance(Path)?.callbackManager.EnqueueUpdate(ID);
+            }
+            catch (Exception ex)
+            {
+                // Restore backup on failure
+                Title = backup.Title;
+                Filename = backup.Filename;
+                Frontmatter = backup.Frontmatter;
+                Tags = backup.Tags;
+                
+                _logger.LogError(ex, "Failed to reload note {Path}: {Message}", Path, ex.Message);
+                throw;
+            }
+        }
+        catch (Exception ex)
         {
-            InsertGUID();
+            _logger.LogError(ex, "Error during note reload: {Message}", ex.Message);
+            throw;
         }
-        if (Frontmatter.ContainsKey(HashKey))
-        {
-            ValidateHash();
-        }
-        else { InsertHash(); }
-
-        Tags = ExtractTags(lines, Frontmatter);
-
-        _logger.LogInformation("========\n{Path}\nTitle: {Title}, {Filename}\n{ID}\n{Hash}\nTags:\n{TagList}",
-            Path, Title, Filename, ID, Hash, string.Join("\n", Tags.Select(t => $" - #{t}")));
     }
 
     /// <summary>
