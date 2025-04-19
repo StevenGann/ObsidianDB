@@ -869,25 +869,108 @@ public class Note
     /// Creates and inserts a new GUID in frontmatter.
     /// </summary>
     /// <returns>The newly generated GUID string.</returns>
+    /// <exception cref="FileNotFoundException">Thrown when the note file is not found.</exception>
+    /// <exception cref="IOException">Thrown when there's an error reading or writing the file.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the note does not contain valid frontmatter.</exception>
     private string InsertGUID()
     {
-        if (Frontmatter.ContainsKey(IdKey) && Frontmatter[IdKey] != null)
+        try
         {
-            return Frontmatter[IdKey]!.FirstOrDefault()!;
-        }
-        string[] lines = System.IO.File.ReadAllLines(Path);
-        string id = Guid.NewGuid().ToString();
+            _logger.LogInformation("Inserting GUID for note {Path}", Path);
 
-        int index = 0;
-        while (index < lines.Length && !lines[index].StartsWith("---")) // Looking for start of YAML block
+            // Check if GUID already exists in frontmatter
+            if (Frontmatter.ContainsKey(IdKey) && Frontmatter[IdKey] != null)
+            {
+                string existingId = Frontmatter[IdKey]!.FirstOrDefault()!;
+                _logger.LogDebug("GUID already exists for note {Path}: {ID}", Path, existingId);
+                return existingId;
+            }
+
+            // Create backup of current content
+            string backupPath = Path + ".bak";
+            File.Copy(Path, backupPath, true);
+
+            try
+            {
+                // Read current content
+                string[] lines = File.ReadAllLines(Path);
+
+                // Find the YAML frontmatter boundaries
+                int startIndex = Array.FindIndex(lines, line => line.Trim() == "---");
+                if (startIndex == -1)
+                {
+                    throw new InvalidOperationException("Note does not contain valid frontmatter");
+                }
+
+                int endIndex = Array.FindIndex(lines, startIndex + 1, line => line.Trim() == "---");
+                if (endIndex == -1)
+                {
+                    throw new InvalidOperationException("Note does not contain valid frontmatter");
+                }
+
+                // Generate new GUID
+                string id = Guid.NewGuid().ToString();
+                _logger.LogDebug("Generated new GUID: {ID}", id);
+
+                // Prepare updated lines with GUID inserted before the closing ---
+                var updatedLines = new List<string>(lines);
+                string guidLine = $"{IdKey}: {id}";
+                updatedLines.Insert(endIndex, guidLine);
+
+                // Write to temporary file first
+                string tempPath = Path + ".tmp";
+                File.WriteAllLines(tempPath, updatedLines);
+
+                // Atomic move operation
+                File.Move(tempPath, Path, true);
+
+                // Update frontmatter
+                Frontmatter.Add(IdKey, [id]);
+
+                // Notify subscribers of the update
+                ObsidianDB.GetDatabaseInstance(Path)?.callbackManager.EnqueueUpdate(ID);
+
+                _logger.LogInformation("GUID inserted successfully for note {Path}: {ID}", Path, id);
+                return id;
+            }
+            catch (Exception ex)
+            {
+                // Restore from backup if available
+                if (File.Exists(backupPath))
+                {
+                    try
+                    {
+                        File.Move(backupPath, Path, true);
+                        _logger.LogWarning("Restored note from backup after failed GUID insertion: {Path}", Path);
+                    }
+                    catch (Exception restoreEx)
+                    {
+                        _logger.LogError(restoreEx, "Failed to restore note from backup: {Path}", Path);
+                    }
+                }
+                throw;
+            }
+            finally
+            {
+                // Clean up backup file
+                if (File.Exists(backupPath))
+                {
+                    try
+                    {
+                        File.Delete(backupPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to delete backup file: {Path}", backupPath);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
         {
-            index++;
+            _logger.LogError(ex, "Error inserting GUID for note {Path}: {Message}", Path, ex.Message);
+            throw;
         }
-        lines[index] += $"\n{IdKey}: {id}";
-        System.IO.File.WriteAllLines(Path, lines);
-
-        Frontmatter.Add(IdKey, [id]);
-        return id;
     }
 
     /// <summary>
