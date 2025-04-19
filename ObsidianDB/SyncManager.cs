@@ -12,13 +12,14 @@ namespace ObsidianDB;
 /// This class handles file system events and ensures proper synchronization
 /// between the file system and the database state.
 /// </summary>
-public class SyncManager
+public class SyncManager : IDisposable
 {
     private readonly ILogger<SyncManager> _logger = LoggerService.GetLogger<SyncManager>();
     private readonly FileSystemWatcher watcher;
     private readonly ObsidianDB DB;
     private readonly HashSet<string> lockedPaths = new();
     private string lockedPath = string.Empty;
+    private bool _disposed;
 
     /// <summary>
     /// Initializes a new instance of the SyncManager class.
@@ -341,5 +342,39 @@ public class SyncManager
     private void OnError(object sender, ErrorEventArgs e)
     {
         _logger.LogError(e.GetException(), "File system watcher error occurred");
+    }
+
+    /// <summary>
+    /// Releases all resources used by the SyncManager instance.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases the unmanaged resources used by the SyncManager instance and optionally releases the managed resources.
+    /// </summary>
+    /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+            return;
+
+        if (disposing)
+        {
+            watcher?.Dispose();
+        }
+
+        _disposed = true;
+    }
+
+    /// <summary>
+    /// Finalizes the SyncManager instance.
+    /// </summary>
+    ~SyncManager()
+    {
+        Dispose(false);
     }
 }

@@ -11,10 +11,11 @@ namespace ObsidianDB;
 /// This class provides a subscription-based system for notifying interested parties
 /// when specific notes are modified or updated.
 /// </summary>
-public class CallbackManager
+public class CallbackManager : IDisposable
 {
     private readonly ILogger<CallbackManager> _logger = LoggerService.GetLogger<CallbackManager>();
     private readonly object _lock = new object();
+    private bool _disposed;
     
     /// <summary>
     /// Delegate type for note update callbacks.
@@ -197,5 +198,43 @@ public class CallbackManager
                 _logger.LogError(ex, "Error executing callback for note {Title}", note.Title);
             }
         }
+    }
+
+    /// <summary>
+    /// Releases all resources used by the CallbackManager instance.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases the unmanaged resources used by the CallbackManager instance and optionally releases the managed resources.
+    /// </summary>
+    /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+            return;
+
+        if (disposing)
+        {
+            lock (_lock)
+            {
+                _subscriptions.Clear();
+                _updates.Clear();
+            }
+        }
+
+        _disposed = true;
+    }
+
+    /// <summary>
+    /// Finalizes the CallbackManager instance.
+    /// </summary>
+    ~CallbackManager()
+    {
+        Dispose(false);
     }
 }
