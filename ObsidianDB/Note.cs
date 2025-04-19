@@ -343,7 +343,7 @@ public class Note
 
                 _logger.LogInformation("Note saved successfully: {Path}", Path);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Restore from backup if available
                 if (File.Exists(backupPath))
