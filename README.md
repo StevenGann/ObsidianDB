@@ -36,6 +36,24 @@ A powerful C# library for programmatically managing Obsidian vaults. ObsidianDB 
 dotnet add package ObsidianDB
 ```
 
+## Submodules
+
+This project uses [HyperVectorDB](https://github.com/StevenGann/HyperVectorDB) as a submodule for vector database functionality. The submodule is located in the `submodules` directory.
+
+### Working with Submodules
+
+When cloning this repository for the first time, you'll need to initialize and update the submodules:
+
+```bash
+git submodule update --init --recursive
+```
+
+To update the submodule to the latest version:
+
+```bash
+git submodule update --remote
+```
+
 ## Quick Start
 
 ```csharp
@@ -89,6 +107,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Inspired by the [Obsidian](https://obsidian.md) note-taking application
 - Built with .NET Core
 - Uses [YamlDotNet](https://github.com/aaubry/YamlDotNet) for YAML parsing
+- Uses [HyperVectorDB](https://github.com/StevenGann/HyperVectorDB) for vector database functionality
 
 ## Support
 

@@ -1,0 +1,3 @@
+[submodule "submodules/HyperVectorDB"]
+	path = submodules/HyperVectorDB
+	url = https://github.com/StevenGann/HyperVectorDB.git

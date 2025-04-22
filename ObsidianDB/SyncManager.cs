@@ -21,6 +21,8 @@ public class SyncManager : IDisposable
     private string lockedPath = string.Empty;
     private bool _disposed;
 
+    public bool Active = false;
+
     /// <summary>
     /// Initializes a new instance of the SyncManager class.
     /// </summary>
@@ -67,6 +69,7 @@ public class SyncManager : IDisposable
         watcher.Error += OnError;
 
         _logger.LogInformation("SyncManager initialized for vault: {VaultPath}", db.VaultPath);
+        Active = true;
     }
 
     /// <summary>
@@ -196,6 +199,7 @@ public class SyncManager : IDisposable
     /// </remarks>
     private void OnChanged(object sender, FileSystemEventArgs e)
     {
+        if(!Active){return;}
         if (e == null)
         {
             _logger.LogWarning("Received null FileSystemEventArgs in OnChanged");
@@ -245,6 +249,7 @@ public class SyncManager : IDisposable
     /// </remarks>
     private void OnCreated(object sender, FileSystemEventArgs e)
     {
+        if(!Active){return;}
         if (e == null)
         {
             _logger.LogWarning("Received null FileSystemEventArgs in OnCreated");
@@ -273,6 +278,7 @@ public class SyncManager : IDisposable
     /// </remarks>
     private void OnDeleted(object sender, FileSystemEventArgs e)
     {
+        if(!Active){return;}
         if (e == null)
         {
             _logger.LogWarning("Received null FileSystemEventArgs in OnDeleted");
@@ -307,6 +313,7 @@ public class SyncManager : IDisposable
     /// </remarks>
     private void OnRenamed(object sender, RenamedEventArgs e)
     {
+        if(!Active){return;}
         if (e == null)
         {
             _logger.LogWarning("Received null RenamedEventArgs in OnRenamed");

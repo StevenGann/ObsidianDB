@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 
@@ -14,6 +15,15 @@ public static class LoggerService
         builder.AddConsole();
         builder.SetMinimumLevel(LogLevel.Information);
     });
+
+    /// <summary>
+    /// Configures the logging level and providers.
+    /// </summary>
+    /// <param name="configure">Action to configure the logging builder.</param>
+    public static void ConfigureLogging(Action<ILoggingBuilder> configure)
+    {
+        _loggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(configure);
+    }
 
     /// <summary>
     /// Gets a logger for the specified type.

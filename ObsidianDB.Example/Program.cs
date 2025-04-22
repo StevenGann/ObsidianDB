@@ -1,10 +1,17 @@
-﻿
-
-//new ObsidianDB.Note(@"C:\Users\sgann\Obsidian\Vault\Projects\Knowledgebase-AI\ObsidianDB.md");
-
-using System;
+﻿using System;
 using System.Threading;
 using ObsidianDB;
+using ObsidianDB.Logging;
+using Microsoft.Extensions.Logging;
+
+// Configure logging
+LoggerService.ConfigureLogging(builder =>
+{
+    builder.SetMinimumLevel(LogLevel.Debug);
+    builder.AddConsole();
+});
+
+//new ObsidianDB.Note(@"C:\Users\sgann\Obsidian\Vault\Projects\Knowledgebase-AI\ObsidianDB.md");
 
 //Note note = new ObsidianDB.Note(@"C:\Users\owner\OneDrive\Apps\remotely-save\Vault\Projects\Knowledgebase-AI\ObsidianDB.md");
 //note.Frontmatter.Add("debug", ["testing"]);

@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using Microsoft.Extensions.Logging;
 using ObsidianDB.Logging;
+using System.Linq;
 
 namespace ObsidianDB;
 
@@ -22,6 +23,7 @@ namespace ObsidianDB;
 public class ObsidianDB : IDisposable
 {
     private readonly ILogger<ObsidianDB> _logger = LoggerService.GetLogger<ObsidianDB>();
+    private HyperVectorDB.HyperVectorDB? _vectorDB;
     private readonly object _lock = new object();
     private bool _disposed;
 
@@ -30,7 +32,12 @@ public class ObsidianDB : IDisposable
     /// This path is used as the root for all note operations and file system monitoring.
     /// </summary>
     /// <value>The absolute path to the Obsidian vault directory.</value>
-    public string VaultPath { get; set; }
+    public string VaultPath { get; private set; }
+
+    /// <summary>
+    /// Gets the name of the vault, which is the last directory name in the VaultPath.
+    /// </summary>
+    public string Name => Path.GetFileName(VaultPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
 
     /// <summary>
     /// Gets or sets the collection of notes in the vault.
@@ -59,6 +66,9 @@ public class ObsidianDB : IDisposable
     private static readonly List<ObsidianDB> obsidianDBs = new();
     private static readonly object _staticLock = new object();
 
+    // State variable for markdown preprocessing
+    private static bool skippingBlock = false;
+
     /// <summary>
     /// Retrieves an existing ObsidianDB instance associated with the given note path.
     /// </summary>
@@ -75,9 +85,9 @@ public class ObsidianDB : IDisposable
     {
         lock (_staticLock)
         {
-            foreach(ObsidianDB db in obsidianDBs)
+            foreach (ObsidianDB db in obsidianDBs)
             {
-                if(notePath.ToUpperInvariant().Contains( db.VaultPath.ToUpperInvariant()))
+                if (notePath.ToUpperInvariant().Contains(db.VaultPath.ToUpperInvariant()))
                 {
                     return db;
                 }
@@ -113,6 +123,9 @@ public class ObsidianDB : IDisposable
         {
             obsidianDBs.Add(this);
         }
+
+        // TODO: Make the embedder configurable or self-contained.
+        _vectorDB = new HyperVectorDB.HyperVectorDB(new HyperVectorDB.Embedder.LmStudio(), Name, 32);
     }
 
     /// <summary>
@@ -148,6 +161,8 @@ public class ObsidianDB : IDisposable
     /// </remarks>
     public void ScanNotes()
     {
+        var totalStopwatch = System.Diagnostics.Stopwatch.StartNew();
+        _logger.LogInformation("Scanning vault {Vault}", Name);
         if (_disposed)
             throw new ObjectDisposedException(nameof(ObsidianDB));
 
@@ -157,20 +172,29 @@ public class ObsidianDB : IDisposable
         var newNotes = new List<Note>();
         var newNotesById = new Dictionary<string, Note>();
 
+        // Measure file scanning time
+        var scanStopwatch = System.Diagnostics.Stopwatch.StartNew();
         foreach (string file in files)
         {
             try
             {
+                syncManager.Active = false;
                 Note note = new(file);
+                syncManager.Active = true;
                 newNotes.Add(note);
                 newNotesById[note.ID] = note;
+                _logger.LogInformation("Scanned note {Note}", note.Title);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading note {File}: {Message}", file, ex.Message);
             }
         }
+        scanStopwatch.Stop();
+        _logger.LogInformation("File scanning completed in {ElapsedSeconds:F2}s", scanStopwatch.Elapsed.TotalSeconds);
 
+        // Measure caching time
+        var cacheStopwatch = System.Diagnostics.Stopwatch.StartNew();
         lock (_lock)
         {
             Notes = newNotes;
@@ -180,6 +204,54 @@ public class ObsidianDB : IDisposable
                 _notesById[kvp.Key] = kvp.Value;
             }
         }
+        cacheStopwatch.Stop();
+        _logger.LogInformation("Index caching completed in {ElapsedSeconds:F2}s", cacheStopwatch.Elapsed.TotalSeconds);
+
+        _logger.LogInformation("Vectorizing vault {Vault}", Name);
+        double fileCount = 0;
+        double vectorizeTotalSeconds = 0;
+        foreach (string file in files)
+        {
+            try
+            {
+                var vectorizeStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                _logger.LogInformation("Vectorizing {File}", file);
+                _vectorDB!.IndexDocumentFile(file, CustomPreprocessor, CustomPostprocessor);
+                vectorizeStopwatch.Stop();
+
+                double progress  = (fileCount + 1)/ files.Length;
+                vectorizeTotalSeconds += vectorizeStopwatch.Elapsed.TotalSeconds;
+                TimeSpan remainingTime = TimeSpan.FromSeconds((files.Length - (fileCount + 1)) * (vectorizeTotalSeconds / (fileCount + 1)));
+
+                _logger.LogInformation("Vectorized {File} in {ElapsedSeconds:F2}s", file, vectorizeStopwatch.Elapsed.TotalSeconds);
+
+                _logger.LogInformation("{FileCount}/{FileTotal} indexed, ETA {Hours:00}:{Minutes:00}:{Seconds:00}", 
+                    (int)fileCount + 1, files.Length, 
+                    remainingTime.Hours, remainingTime.Minutes, remainingTime.Seconds);
+
+                if (((int)fileCount) % 5 == 0)
+                {
+                    _vectorDB!.Save();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error vectorizing note {File}: {Message}", file, ex.Message);
+            }
+            fileCount++;
+        }
+
+        try
+        {
+            _vectorDB!.Save();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving vector database: {Message}", ex.Message);
+        }
+
+        totalStopwatch.Stop();
+        _logger.LogInformation("Total vault scan completed in {ElapsedMinutes:F2}m", totalStopwatch.Elapsed.TotalMinutes);
     }
 
     /// <summary>
@@ -202,6 +274,25 @@ public class ObsidianDB : IDisposable
     }
 
     /// <summary>
+    /// Retrieves a note from the database by its full file path.
+    /// </summary>
+    /// <param name="path">The full path to the note file.</param>
+    /// <returns>The Note object with the specified path, or null if not found.</returns>
+    public Note? GetFromPath(string path)
+    {
+        if (_disposed)
+            throw new ObjectDisposedException(nameof(ObsidianDB));
+
+        if (string.IsNullOrWhiteSpace(path))
+            throw new ArgumentNullException(nameof(path));
+
+        lock (_lock)
+        {
+            return Notes.FirstOrDefault(note => note.Path.Equals(path, StringComparison.Ordinal));
+        }
+    }
+
+    /// <summary>
     /// Updates the database state by processing pending synchronization and callback events.
     /// </summary>
     /// <remarks>
@@ -215,8 +306,24 @@ public class ObsidianDB : IDisposable
         if (_disposed)
             throw new ObjectDisposedException(nameof(ObsidianDB));
 
-        syncManager.Tick();
-        callbackManager.Tick();
+        try
+        {
+            syncManager.Tick();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating filesystem sync: {Message}", ex.Message);
+        }
+
+        try
+        {
+            callbackManager.Tick();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing callbacks: {Message}", ex.Message);
+        }
+        
     }
 
     /// <summary>
@@ -257,5 +364,66 @@ public class ObsidianDB : IDisposable
     ~ObsidianDB()
     {
         Dispose(false);
+    }
+
+    /// <summary>
+    /// Custom preprocessor for document indexing that handles markdown-specific formatting
+    /// Filters out:
+    /// - Empty lines
+    /// - YAML frontmatter
+    /// - Code blocks
+    /// - Metadata lines
+    /// - Annotation lines
+    /// - Index links
+    /// </summary>
+    private static string? CustomPreprocessor(string line, string? path, int? lineNumber)
+    {
+        if (string.IsNullOrWhiteSpace(line)) { return null; }
+
+        if (path != null && path.ToUpperInvariant().EndsWith(".MD"))
+        {
+            // Skip YAML frontmatter
+            if (line.Contains("---"))
+            {
+                skippingBlock = false;
+                return null;
+            }
+            // Handle code blocks
+            else if (line.Contains("```"))
+            {
+                skippingBlock = !skippingBlock;
+                return null;
+            }
+            // Skip metadata and special markdown lines
+            else if (line.EndsWith("aliases: ") ||
+                    line.Contains("date created:") ||
+                    line.Contains("date modified:") ||
+                    (line.EndsWith(":") && !line.StartsWith("#")))
+            {
+                return null;
+            }
+
+            // Skip annotation lines
+            if (line.Contains("%%")) { return null; }
+
+            // Skip index links
+            if (line.Trim().StartsWith("[[") && line.Trim().EndsWith("]]")) { return null; }
+
+            // Skip content within code blocks
+            if (skippingBlock) { return null; }
+        }
+
+        return line.Trim();
+    }
+
+    /// <summary>
+    /// Custom postprocessor that adds file path and line number information to each line
+    /// </summary>
+    private static string? CustomPostprocessor(string line, string? path, int? lineNumber)
+    {
+        if (path == null) { return line; }
+        ObsidianDB db = ObsidianDB.GetDatabaseInstance(path);
+        Note note = db.GetFromPath(path);
+        return $"{note.ID}|{lineNumber}";
     }
 }
