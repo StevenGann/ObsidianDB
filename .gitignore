@@ -368,3 +368,4 @@ HyperVectorDB/Centivus.EnglishStemmer.dll
 /docs/_site
 docs/api/.manifest
 /docs/api
+*.bin
