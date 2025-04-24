@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Class Note | ObsidianDB </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Class Note | ObsidianDB ">
+      
+      <meta name="description" content="Represents a Markdown note file in an Obsidian vault, managing its content, metadata, and file operations. This class handles the lifecycle of a note including loading, saving, and maintaining metadata like title, tags, and unique identifiers. It ensures data integrity through atomic file operations and hash validation.">
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/StevenGann/ObsidianDB/new/main/apiSpec/new?filename=ObsidianDB_Note.md&amp;value=---%0Auid%3A%20ObsidianDB.Note%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="ObsidianDB">
+            ObsidianDB
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="ObsidianDB.Note">
+
+
+
+  <h1 id="ObsidianDB_Note" data-uid="ObsidianDB.Note" class="text-break">
+Class Note  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L19"><i class="bi bi-code-slash"></i></a>
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="ObsidianDB.html">ObsidianDB</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>ObsidianDB.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Represents a Markdown note file in an Obsidian vault, managing its content, metadata, and file operations.
+This class handles the lifecycle of a note including loading, saving, and maintaining metadata like title,
+tags, and unique identifiers. It ensures data integrity through atomic file operations and hash validation.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public class Note</code></pre>
+  </div>
+
+
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><span class="xref">Note</span></div>
+    </dd>
+  </dl>
+
+
+
+  <dl class="typelist inheritedMembers">
+    <dt>Inherited Members</dt>
+    <dd>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)">object.Equals(object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)">object.Equals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gethashcode">object.GetHashCode()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gettype">object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone">object.MemberwiseClone()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.referenceequals">object.ReferenceEquals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.tostring">object.ToString()</a>
+    </div>
+  </dd></dl>
+
+
+
+
+
+
+  <h2 class="section" id="constructors">Constructors
+</h2>
+
+
+  <a id="ObsidianDB_Note__ctor_" data-uid="ObsidianDB.Note.#ctor*"></a>
+
+  <h3 id="ObsidianDB_Note__ctor_System_String_" data-uid="ObsidianDB.Note.#ctor(System.String)">
+  Note(string)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L160"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Initializes a new instance of the Note class from a file path.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Note(string path)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>path</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The filesystem path to the note file. Must be within the Obsidian vault directory.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h4 class="section" id="ObsidianDB_Note__ctor_System_String__remarks">Remarks</h4>
+  <div class="markdown level1 remarks"><p>The constructor performs several initialization steps:</p>
+<ul>
+<li>Reads and parses the file content</li>
+<li>Extracts title, frontmatter, and tags</li>
+<li>Ensures presence of unique ID and content hash</li>
+<li>Outputs debug information about the note
+The note is immediately ready for use after construction.</li>
+</ul>
+</div>
+
+  <h4 class="section">Exceptions</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.filenotfoundexception">FileNotFoundException</a></dt>
+    <dd><p>Thrown when the note file is not found at the specified path.</p>
+</dd>
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.argumentexception">ArgumentException</a></dt>
+    <dd><p>Thrown when the path is invalid or outside the vault directory.</p>
+</dd>
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.invalidoperationexception">InvalidOperationException</a></dt>
+    <dd><p>Thrown when the note does not contain valid frontmatter.</p>
+</dd>
+  </dl>
+
+
+
+  <h2 class="section" id="fields">Fields
+</h2>
+
+
+
+  <h3 id="ObsidianDB_Note_Frontmatter" data-uid="ObsidianDB.Note.Frontmatter">
+  Frontmatter
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L89"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets or sets the YAML frontmatter stored as key-value pairs.
+Values are stored as lists to support multi-value YAML fields.
+The frontmatter is automatically synchronized with the file on save.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Dictionary&lt;string, List&lt;string&gt;?&gt; Frontmatter</code></pre>
+  </div>
+
+
+
+
+  <h4 class="section">Field Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2">Dictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;&gt;</dt>
+    <dd><p>A dictionary containing the note's frontmatter data, where keys are strings and values are lists of strings.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <h3 id="ObsidianDB_Note_Tags" data-uid="ObsidianDB.Note.Tags">
+  Tags
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L97"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets or sets the collection of tags found in the note (both in frontmatter and inline).
+Tags are automatically extracted from both the frontmatter and the note's content.
+Inline tags are identified by the # symbol followed by non-whitespace characters.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public List&lt;string&gt; Tags</code></pre>
+  </div>
+
+
+
+
+  <h4 class="section">Field Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd><p>A list of unique tags associated with the note.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="properties">Properties
+</h2>
+
+
+  <a id="ObsidianDB_Note_Body_" data-uid="ObsidianDB.Note.Body*"></a>
+
+  <h3 id="ObsidianDB_Note_Body" data-uid="ObsidianDB.Note.Body">
+  Body
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L109"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets or sets the main content of the note (everything after the frontmatter).
+Implements lazy loading - content is only read when accessed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string Body { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The note's body content as a string, excluding the YAML frontmatter.</p>
+</dd>
+  </dl>
+
+
+
+
+  <h4 class="section" id="ObsidianDB_Note_Body_remarks">Remarks</h4>
+  <div class="markdown level1 remarks"><p>Setting this property automatically saves changes to disk.
+The content is cached after first access to avoid repeated file reads.
+Changes to the content are tracked through the Hash property.</p>
+</div>
+
+
+
+
+  <a id="ObsidianDB_Note_Filename_" data-uid="ObsidianDB.Note.Filename*"></a>
+
+  <h3 id="ObsidianDB_Note_Filename" data-uid="ObsidianDB.Note.Filename">
+  Filename
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L43"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets or sets the filename portion of the path.
+This is automatically updated when the Path property changes.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string Filename { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The filename without the directory path.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="ObsidianDB_Note_Hash_" data-uid="ObsidianDB.Note.Hash*"></a>
+
+  <h3 id="ObsidianDB_Note_Hash" data-uid="ObsidianDB.Note.Hash">
+  Hash
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L71"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the MD5 hash of the note's content, stored in YAML frontmatter.
+Used to detect changes when the file is modified externally.
+The hash is calculated from the note's content only, excluding the YAML frontmatter.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string Hash { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>A string containing the Base64 encoded MD5 hash of the note's content.</p>
+</dd>
+  </dl>
+
+
+
+
+
+  <h4 class="section">Exceptions</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.invalidoperationexception">InvalidOperationException</a></dt>
+    <dd><p>Thrown when the note does not contain valid frontmatter.</p>
+</dd>
+  </dl>
+
+
+
+  <a id="ObsidianDB_Note_ID_" data-uid="ObsidianDB.Note.ID*"></a>
+
+  <h3 id="ObsidianDB_Note_ID" data-uid="ObsidianDB.Note.ID">
+  ID
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L52"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the unique identifier for the note, stored in YAML frontmatter.
+Automatically generates a new GUID if not present.
+The GUID is used for tracking note changes and maintaining relationships between notes.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string ID { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>A string containing the note's unique identifier in GUID format.</p>
+</dd>
+  </dl>
+
+
+
+
+
+  <h4 class="section">Exceptions</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.invalidoperationexception">InvalidOperationException</a></dt>
+    <dd><p>Thrown when the note does not contain valid frontmatter.</p>
+</dd>
+  </dl>
+
+
+
+  <a id="ObsidianDB_Note_Path_" data-uid="ObsidianDB.Note.Path*"></a>
+
+  <h3 id="ObsidianDB_Note_Path" data-uid="ObsidianDB.Note.Path">
+  Path
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L36"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets or sets the full filesystem path to the note file.
+The path must be within the Obsidian vault directory.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string Path { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The absolute path to the note file.</p>
+</dd>
+  </dl>
+
+
+
+
+
+  <h4 class="section">Exceptions</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.argumentexception">ArgumentException</a></dt>
+    <dd><p>Thrown when the path is outside the vault directory.</p>
+</dd>
+  </dl>
+
+
+
+  <a id="ObsidianDB_Note_Title_" data-uid="ObsidianDB.Note.Title*"></a>
+
+  <h3 id="ObsidianDB_Note_Title" data-uid="ObsidianDB.Note.Title">
+  Title
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L28"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets or sets the title of the note, extracted from the first H1 heading (# Title).
+If no H1 heading is found, falls back to the filename without extension.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string? Title { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The note's title, or null if no H1 heading is found and filename is not available.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="ObsidianDB_Note_Reload_" data-uid="ObsidianDB.Note.Reload*"></a>
+
+  <h3 id="ObsidianDB_Note_Reload_System_String_" data-uid="ObsidianDB.Note.Reload(System.String)">
+  Reload(string)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L203"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reloads the note from disk, optionally with a new path.
+This method preserves the note's state in case of failure and provides detailed error information.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Reload(string path = &quot;&quot;)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>path</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>Optional new path for the note. If empty, uses existing path.
+The new path must be within the vault directory.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h4 class="section" id="ObsidianDB_Note_Reload_System_String__remarks">Remarks</h4>
+  <div class="markdown level1 remarks"><p>This method performs the following operations:</p>
+<ul>
+<li>Validates the new path if provided</li>
+<li>Creates a backup of the current state</li>
+<li>Reloads the note content and metadata</li>
+<li>Restores the backup if any operation fails</li>
+<li>Notifies subscribers of the reload</li>
+</ul>
+</div>
+
+  <h4 class="section">Exceptions</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.filenotfoundexception">FileNotFoundException</a></dt>
+    <dd><p>Thrown when the note file is not found.</p>
+</dd>
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.argumentexception">ArgumentException</a></dt>
+    <dd><p>Thrown when the new path is invalid or outside the vault.</p>
+</dd>
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.invalidoperationexception">InvalidOperationException</a></dt>
+    <dd><p>Thrown when the note does not contain valid frontmatter.</p>
+</dd>
+  </dl>
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L19" class="edit-link">Edit this page</a>
+        </div>
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

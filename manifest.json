@@ -1,0 +1,135 @@
+{
+  "source_base_path": "/github/workspace/docs",
+  "xrefmap": "xrefmap.yml",
+  "files": [
+    {
+      "type": "Resource",
+      "output": {
+        "resource": {
+          "relative_path": "index.json"
+        }
+      }
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ObsidianDB.CallbackManager.Callback.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ObsidianDB.CallbackManager.Callback.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ObsidianDB.CallbackManager.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ObsidianDB.CallbackManager.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ObsidianDB.Logging.LoggerService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ObsidianDB.Logging.LoggerService.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ObsidianDB.Logging.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ObsidianDB.Logging.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ObsidianDB.Note.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ObsidianDB.Note.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ObsidianDB.ObsidianDB.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ObsidianDB.ObsidianDB.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ObsidianDB.SyncManager.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ObsidianDB.SyncManager.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ObsidianDB.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ObsidianDB.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "api/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/toc.html"
+        },
+        ".json": {
+          "relative_path": "api/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "index.md",
+      "output": {
+        ".html": {
+          "relative_path": "index.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "toc.html"
+        },
+        ".json": {
+          "relative_path": "toc.json"
+        }
+      },
+      "version": ""
+    }
+  ],
+  "groups": [
+    {
+      "xrefmap": "xrefmap.yml"
+    }
+  ]
+}
