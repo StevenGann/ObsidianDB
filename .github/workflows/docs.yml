@@ -1,0 +1,54 @@
+name: Documentation
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+        
+    - name: Cache NuGet packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+          
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore
+
+  generate_docs:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'  # Only run on master branch
+
+    steps:
+    - uses: actions/checkout@v4
+      name: Checkout code
+
+    - name: Generate Documentation
+      uses: nunit/docfx-action@v4.0.0
+      with:
+        args: docs/docfx.json
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: docs/_site
+        publish_branch: documentation  # Use a different branch for documentation 
