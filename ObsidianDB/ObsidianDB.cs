@@ -23,7 +23,7 @@ namespace ObsidianDB;
 public class ObsidianDB : IDisposable
 {
     private readonly ILogger<ObsidianDB> _logger = LoggerService.GetLogger<ObsidianDB>();
-    private HyperVectorDB.HyperVectorDB? _vectorDB;
+    internal HyperVectorDB.HyperVectorDB? _vectorDB;
     private readonly object _lock = new object();
     private bool _disposed;
 
@@ -378,14 +378,22 @@ public class ObsidianDB : IDisposable
     /// </summary>
     private static string? CustomPreprocessor(string line, string? path, int? lineNumber)
     {
-        if (string.IsNullOrWhiteSpace(line)) { return null; }
 
         if (path != null && path.ToUpperInvariant().EndsWith(".MD"))
         {
-            // Skip YAML frontmatter
-            if (line.Contains("---"))
+            if(lineNumber == 0)
             {
                 skippingBlock = false;
+            }
+
+            if(string.IsNullOrWhiteSpace(line))
+            {
+                return null;
+            }
+            // Skip YAML frontmatter
+            else if (line.Contains("---"))
+            {
+                skippingBlock = !skippingBlock;
                 return null;
             }
             // Handle code blocks
@@ -398,18 +406,19 @@ public class ObsidianDB : IDisposable
             else if (line.EndsWith("aliases: ") ||
                     line.Contains("date created:") ||
                     line.Contains("date modified:") ||
-                    (line.EndsWith(":") && !line.StartsWith("#")))
+                    (line.EndsWith(":") && !line.StartsWith("#")) ||
+                    line.StartsWith('#') && !line.Contains("# "))
             {
                 return null;
             }
 
             // Skip annotation lines
-            if (line.Contains("%%")) { return null; }
+            else if (line.Contains("%%")) { return null; }
 
             // Skip index links
-            if (line.Trim().StartsWith("[[") && line.Trim().EndsWith("]]")) { return null; }
+            else if (line.Trim().StartsWith("[[") && line.Trim().EndsWith("]]")) { return null; }
 
-            // Skip content within code blocks
+            // Skip content within blocks
             if (skippingBlock) { return null; }
         }
 
