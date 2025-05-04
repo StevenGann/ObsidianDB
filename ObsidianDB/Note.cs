@@ -130,6 +130,13 @@ public class Note
         /// </summary>
         public string? NoteId { get; }
 
+        /// <summary>
+        /// Gets the linked Note object if it exists in the database.
+        /// Returns null if the note is not found or if NoteId is null.
+        /// </summary>
+        public Note? LinkedNote => 
+            NoteId != null ? ObsidianDB.GetDatabaseInstance(Title)?.GetFromId(NoteId) : null;
+
         public InternalLink(string title, string? displayText, string? noteId)
         {
             Title = title;
@@ -1406,6 +1413,13 @@ public class Note
         /// Gets the ID of the note that contains this link.
         /// </summary>
         public string SourceNoteId { get; }
+
+        /// <summary>
+        /// Gets the source Note object that contains this backlink.
+        /// Returns null if the note is not found in the database.
+        /// </summary>
+        public Note? SourceNote => 
+            ObsidianDB.GetDatabaseInstance(Title)?.GetFromId(SourceNoteId);
 
         public BackLink(string title, string? displayText, string sourceNoteId)
         {
