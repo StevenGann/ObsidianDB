@@ -684,6 +684,22 @@ references:
   fullName.vb: ObsidianDB.ObsidianDB.New
   nameWithType: ObsidianDB.ObsidianDB
   nameWithType.vb: ObsidianDB.New
+- uid: ObsidianDB.ObsidianDB.AddNote(System.String,System.String,System.Collections.Generic.List{System.String},System.Collections.Generic.Dictionary{System.String,System.Collections.Generic.List{System.String}})
+  name: AddNote(string, string, List<string>?, Dictionary<string, List<string>?>?)
+  href: api/ObsidianDB.ObsidianDB.html#ObsidianDB_ObsidianDB_AddNote_System_String_System_String_System_Collections_Generic_List_System_String__System_Collections_Generic_Dictionary_System_String_System_Collections_Generic_List_System_String___
+  commentId: M:ObsidianDB.ObsidianDB.AddNote(System.String,System.String,System.Collections.Generic.List{System.String},System.Collections.Generic.Dictionary{System.String,System.Collections.Generic.List{System.String}})
+  name.vb: AddNote(String, String, List(Of String), Dictionary(Of String, List(Of String)))
+  fullName: ObsidianDB.ObsidianDB.AddNote(string, string, System.Collections.Generic.List<string>?, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>?>?)
+  fullName.vb: ObsidianDB.ObsidianDB.AddNote(String, String, System.Collections.Generic.List(Of String), System.Collections.Generic.Dictionary(Of String, System.Collections.Generic.List(Of String)))
+  nameWithType: ObsidianDB.AddNote(string, string, List<string>?, Dictionary<string, List<string>?>?)
+  nameWithType.vb: ObsidianDB.AddNote(String, String, List(Of String), Dictionary(Of String, List(Of String)))
+- uid: ObsidianDB.ObsidianDB.AddNote*
+  name: AddNote
+  href: api/ObsidianDB.ObsidianDB.html#ObsidianDB_ObsidianDB_AddNote_
+  commentId: Overload:ObsidianDB.ObsidianDB.AddNote
+  isSpec: "True"
+  fullName: ObsidianDB.ObsidianDB.AddNote
+  nameWithType: ObsidianDB.AddNote
 - uid: ObsidianDB.ObsidianDB.Dispose
   name: Dispose()
   href: api/ObsidianDB.ObsidianDB.html#ObsidianDB_ObsidianDB_Dispose
@@ -825,12 +841,15 @@ references:
   isSpec: "True"
   fullName: ObsidianDB.ObsidianDB.Notes
   nameWithType: ObsidianDB.Notes
-- uid: ObsidianDB.ObsidianDB.ScanNotes
-  name: ScanNotes()
-  href: api/ObsidianDB.ObsidianDB.html#ObsidianDB_ObsidianDB_ScanNotes
-  commentId: M:ObsidianDB.ObsidianDB.ScanNotes
-  fullName: ObsidianDB.ObsidianDB.ScanNotes()
-  nameWithType: ObsidianDB.ScanNotes()
+- uid: ObsidianDB.ObsidianDB.ScanNotes(System.Boolean)
+  name: ScanNotes(bool)
+  href: api/ObsidianDB.ObsidianDB.html#ObsidianDB_ObsidianDB_ScanNotes_System_Boolean_
+  commentId: M:ObsidianDB.ObsidianDB.ScanNotes(System.Boolean)
+  name.vb: ScanNotes(Boolean)
+  fullName: ObsidianDB.ObsidianDB.ScanNotes(bool)
+  fullName.vb: ObsidianDB.ObsidianDB.ScanNotes(Boolean)
+  nameWithType: ObsidianDB.ScanNotes(bool)
+  nameWithType.vb: ObsidianDB.ScanNotes(Boolean)
 - uid: ObsidianDB.ObsidianDB.ScanNotes*
   name: ScanNotes
   href: api/ObsidianDB.ObsidianDB.html#ObsidianDB_ObsidianDB_ScanNotes_
@@ -838,6 +857,22 @@ references:
   isSpec: "True"
   fullName: ObsidianDB.ObsidianDB.ScanNotes
   nameWithType: ObsidianDB.ScanNotes
+- uid: ObsidianDB.ObsidianDB.ToJson(System.String)
+  name: ToJson(string)
+  href: api/ObsidianDB.ObsidianDB.html#ObsidianDB_ObsidianDB_ToJson_System_String_
+  commentId: M:ObsidianDB.ObsidianDB.ToJson(System.String)
+  name.vb: ToJson(String)
+  fullName: ObsidianDB.ObsidianDB.ToJson(string)
+  fullName.vb: ObsidianDB.ObsidianDB.ToJson(String)
+  nameWithType: ObsidianDB.ToJson(string)
+  nameWithType.vb: ObsidianDB.ToJson(String)
+- uid: ObsidianDB.ObsidianDB.ToJson*
+  name: ToJson
+  href: api/ObsidianDB.ObsidianDB.html#ObsidianDB_ObsidianDB_ToJson_
+  commentId: Overload:ObsidianDB.ObsidianDB.ToJson
+  isSpec: "True"
+  fullName: ObsidianDB.ObsidianDB.ToJson
+  nameWithType: ObsidianDB.ToJson
 - uid: ObsidianDB.ObsidianDB.Update
   name: Update()
   href: api/ObsidianDB.ObsidianDB.html#ObsidianDB_ObsidianDB_Update
