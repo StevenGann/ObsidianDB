@@ -35,7 +35,96 @@ public class Note
     /// </summary>
     /// <value>The absolute path to the note file.</value>
     /// <exception cref="ArgumentException">Thrown when the path is outside the vault directory.</exception>
-    public string Path { get; set; }
+    public string Path { get; private set; }
+    
+    /// <summary>
+    /// Gets or sets the path of the note file relative to its vault directory.
+    /// </summary>
+    /// <value>The path relative to the vault directory.</value>
+    /// <remarks>
+    /// This property uses the parent ObsidianDB instance's VaultPath to calculate the relative path.
+    /// The returned path uses forward slashes (/) as directory separators for consistency.
+    /// When setting this property, the file will be moved to the new location.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">Thrown when the note is not associated with any ObsidianDB instance.</exception>
+    /// <exception cref="ArgumentException">Thrown when the new path is invalid or outside the vault directory.</exception>
+    /// <exception cref="IOException">Thrown when there's an error moving the file.</exception>
+    public string RelativePath
+    {
+        get
+        {
+            var db = ObsidianDB.GetDatabaseInstance(Path);
+            if (db == null)
+            {
+                throw new InvalidOperationException("Note is not associated with any ObsidianDB instance");
+            }
+
+            // Get the relative path by removing the vault path prefix
+            string relativePath = Path.Substring(db.VaultPath.Length).TrimStart(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar);
+            
+            // Normalize directory separators to forward slashes
+            return relativePath.Replace(System.IO.Path.DirectorySeparatorChar, '/');
+        }
+        set
+        {
+            var db = ObsidianDB.GetDatabaseInstance(Path);
+            if (db == null)
+            {
+                throw new InvalidOperationException("Note is not associated with any ObsidianDB instance");
+            }
+
+            // Normalize the new relative path to use system directory separators
+            string normalizedPath = value.Replace('/', System.IO.Path.DirectorySeparatorChar);
+            
+            // Construct the new absolute path
+            string newPath = System.IO.Path.Combine(db.VaultPath, normalizedPath);
+            
+            // Ensure the new path is within the vault
+            if (!newPath.StartsWith(db.VaultPath, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("New path must be within the vault directory", nameof(value));
+            }
+
+            // If the paths are the same, no need to move
+            if (string.Equals(Path, newPath, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            try
+            {
+                // Create the target directory if it doesn't exist
+                string? targetDir = System.IO.Path.GetDirectoryName(newPath);
+                if (targetDir != null)
+                {
+                    Directory.CreateDirectory(targetDir);
+                }
+
+                // Copy the file to the new location
+                File.Copy(Path, newPath, true);
+
+                // Delete the old file
+                File.Delete(Path);
+
+                // Update the Path property
+                Path = newPath;
+                
+                // Update the Filename property
+                Filename = System.IO.Path.GetFileName(newPath);
+
+                // Notify subscribers of the update
+                db.callbackManager.EnqueueUpdate(ID);
+
+                _logger.LogInformation("Note moved from {OldPath} to {NewPath}", Path, newPath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to move note from {OldPath} to {NewPath}: {Message}", 
+                    Path, newPath, ex.Message);
+                throw;
+            }
+        }
+    }
     
     /// <summary>
     /// Gets or sets the filename portion of the path.
