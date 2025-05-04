@@ -321,7 +321,7 @@ This path is used as the root for all note operations and file system monitoring
 
   <h3 id="ObsidianDB_ObsidianDB_Dispose" data-uid="ObsidianDB.ObsidianDB.Dispose">
   Dispose()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/ObsidianDB.cs/#L332"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/ObsidianDB.cs/#L351"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Releases all resources used by the ObsidianDB instance.</p>
@@ -348,7 +348,7 @@ This path is used as the root for all note operations and file system monitoring
 
   <h3 id="ObsidianDB_ObsidianDB_Dispose_System_Boolean_" data-uid="ObsidianDB.ObsidianDB.Dispose(System.Boolean)">
   Dispose(bool)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/ObsidianDB.cs/#L342"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/ObsidianDB.cs/#L361"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Releases the unmanaged resources used by the ObsidianDB instance and optionally releases the managed resources.</p>
@@ -381,7 +381,7 @@ This path is used as the root for all note operations and file system monitoring
 
   <h3 id="ObsidianDB_ObsidianDB_Finalize" data-uid="ObsidianDB.ObsidianDB.Finalize">
   ~ObsidianDB()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/ObsidianDB.cs/#L364"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/ObsidianDB.cs/#L383"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Finalizes the ObsidianDB instance.</p>
@@ -529,6 +529,45 @@ whose vault path contains the given note path. The comparison is case-insensitiv
 
 
 
+  <a id="ObsidianDB_ObsidianDB_GetFromTitle_" data-uid="ObsidianDB.ObsidianDB.GetFromTitle*"></a>
+
+  <h3 id="ObsidianDB_ObsidianDB_GetFromTitle_System_String_" data-uid="ObsidianDB.ObsidianDB.GetFromTitle(System.String)">
+  GetFromTitle(string)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/ObsidianDB.cs/#L300"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Retrieves a note from the database by its title.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Note? GetFromTitle(string title)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>title</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The title of the note to find.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ObsidianDB.Note.html">Note</a></dt>
+    <dd><p>The Note object with the specified title, or null if not found.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
   <a id="ObsidianDB_ObsidianDB_GetNotes_" data-uid="ObsidianDB.ObsidianDB.GetNotes*"></a>
 
   <h3 id="ObsidianDB_ObsidianDB_GetNotes" data-uid="ObsidianDB.ObsidianDB.GetNotes">
@@ -606,7 +645,7 @@ The implementation uses yield return to provide efficient enumeration.</p>
 
   <h3 id="ObsidianDB_ObsidianDB_Update" data-uid="ObsidianDB.ObsidianDB.Update">
   Update()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/ObsidianDB.cs/#L304"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/ObsidianDB.cs/#L323"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Updates the database state by processing pending synchronization and callback events.</p>

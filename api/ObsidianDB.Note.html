@@ -89,7 +89,7 @@
 
 
   <h1 id="ObsidianDB_Note" data-uid="ObsidianDB.Note" class="text-break">
-Class Note  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L19"><i class="bi bi-code-slash"></i></a>
+Class Note  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L21"><i class="bi bi-code-slash"></i></a>
   </h1>
 
   <div class="facts text-secondary">
@@ -159,7 +159,7 @@ tags, and unique identifiers. It ensures data integrity through atomic file oper
 
   <h3 id="ObsidianDB_Note__ctor_System_String_" data-uid="ObsidianDB.Note.#ctor(System.String)">
   Note(string)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L160"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L224"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Initializes a new instance of the Note class from a file path.</p>
@@ -217,7 +217,7 @@ The note is immediately ready for use after construction.</li>
 
   <h3 id="ObsidianDB_Note_Frontmatter" data-uid="ObsidianDB.Note.Frontmatter">
   Frontmatter
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L89"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L91"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets or sets the YAML frontmatter stored as key-value pairs.
@@ -251,7 +251,7 @@ The frontmatter is automatically synchronized with the file on save.</p>
 
   <h3 id="ObsidianDB_Note_Tags" data-uid="ObsidianDB.Note.Tags">
   Tags
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L97"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L99"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets or sets the collection of tags found in the note (both in frontmatter and inline).
@@ -286,11 +286,44 @@ Inline tags are identified by the # symbol followed by non-whitespace characters
 </h2>
 
 
+  <a id="ObsidianDB_Note_Backlinks_" data-uid="ObsidianDB.Note.Backlinks*"></a>
+
+  <h3 id="ObsidianDB_Note_Backlinks" data-uid="ObsidianDB.Note.Backlinks">
+  Backlinks
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1356"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets a list of all backlinks to this note from other notes in the vault.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public List&lt;Note.BackLink&gt; Backlinks { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="ObsidianDB.Note.html">Note</a>.<a class="xref" href="ObsidianDB.Note.BackLink.html">BackLink</a>&gt;</dt>
+    <dd><p>A list of BackLink objects representing links from other notes to this note.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
   <a id="ObsidianDB_Note_Body_" data-uid="ObsidianDB.Note.Body*"></a>
 
   <h3 id="ObsidianDB_Note_Body" data-uid="ObsidianDB.Note.Body">
   Body
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L109"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L173"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets or sets the main content of the note (everything after the frontmatter).
@@ -325,11 +358,44 @@ Changes to the content are tracked through the Hash property.</p>
 
 
 
+  <a id="ObsidianDB_Note_ExternalLinks_" data-uid="ObsidianDB.Note.ExternalLinks*"></a>
+
+  <h3 id="ObsidianDB_Note_ExternalLinks" data-uid="ObsidianDB.Note.ExternalLinks">
+  ExternalLinks
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L111"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the collection of external links found in the note.
+External links are in standard Markdown format <a href="URL">Display Text</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public List&lt;Note.ExternalLink&gt; ExternalLinks { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="ObsidianDB.Note.html">Note</a>.<a class="xref" href="ObsidianDB.Note.ExternalLink.html">ExternalLink</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
   <a id="ObsidianDB_Note_Filename_" data-uid="ObsidianDB.Note.Filename*"></a>
 
   <h3 id="ObsidianDB_Note_Filename" data-uid="ObsidianDB.Note.Filename">
   Filename
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L43"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L45"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets or sets the filename portion of the path.
@@ -363,7 +429,7 @@ This is automatically updated when the Path property changes.</p>
 
   <h3 id="ObsidianDB_Note_Hash" data-uid="ObsidianDB.Note.Hash">
   Hash
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L71"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L73"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the MD5 hash of the note's content, stored in YAML frontmatter.
@@ -404,7 +470,7 @@ The hash is calculated from the note's content only, excluding the YAML frontmat
 
   <h3 id="ObsidianDB_Note_ID" data-uid="ObsidianDB.Note.ID">
   ID
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L52"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L54"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the unique identifier for the note, stored in YAML frontmatter.
@@ -441,11 +507,44 @@ The GUID is used for tracking note changes and maintaining relationships between
 
 
 
+  <a id="ObsidianDB_Note_InternalLinks_" data-uid="ObsidianDB.Note.InternalLinks*"></a>
+
+  <h3 id="ObsidianDB_Note_InternalLinks" data-uid="ObsidianDB.Note.InternalLinks">
+  InternalLinks
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L105"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the collection of internal links found in the note.
+Internal links are in the format [[Note Title]] or [[Note Title|Display Text]].</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public List&lt;Note.InternalLink&gt; InternalLinks { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="ObsidianDB.Note.html">Note</a>.<a class="xref" href="ObsidianDB.Note.InternalLink.html">InternalLink</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
   <a id="ObsidianDB_Note_Path_" data-uid="ObsidianDB.Note.Path*"></a>
 
   <h3 id="ObsidianDB_Note_Path" data-uid="ObsidianDB.Note.Path">
   Path
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L36"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L38"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets or sets the full filesystem path to the note file.
@@ -485,7 +584,7 @@ The path must be within the Obsidian vault directory.</p>
 
   <h3 id="ObsidianDB_Note_Title" data-uid="ObsidianDB.Note.Title">
   Title
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L28"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L30"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets or sets the title of the note, extracted from the first H1 heading (# Title).
@@ -519,11 +618,188 @@ If no H1 heading is found, falls back to the filename without extension.</p>
 </h2>
 
 
+  <a id="ObsidianDB_Note_GetAllLinks_" data-uid="ObsidianDB.Note.GetAllLinks*"></a>
+
+  <h3 id="ObsidianDB_Note_GetAllLinks" data-uid="ObsidianDB.Note.GetAllLinks">
+  GetAllLinks()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1281"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets all links in the note, both internal and external.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public (List&lt;Note.InternalLink&gt; internalLinks, List&lt;Note.ExternalLink&gt; externalLinks) GetAllLinks()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt>(<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="ObsidianDB.Note.html">Note</a>.<a class="xref" href="ObsidianDB.Note.InternalLink.html">InternalLink</a>&gt; <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.valuetuple-system.collections.generic.list-obsidiandb.note.internallink-,system.collections.generic.list-obsidiandb.note.externallink--.internallinks">internalLinks</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="ObsidianDB.Note.html">Note</a>.<a class="xref" href="ObsidianDB.Note.ExternalLink.html">ExternalLink</a>&gt; <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.valuetuple-system.collections.generic.list-obsidiandb.note.internallink-,system.collections.generic.list-obsidiandb.note.externallink--.externallinks">externalLinks</a>)</dt>
+    <dd><p>A tuple containing lists of internal and external links.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ObsidianDB_Note_GetExternalLinks_" data-uid="ObsidianDB.Note.GetExternalLinks*"></a>
+
+  <h3 id="ObsidianDB_Note_GetExternalLinks" data-uid="ObsidianDB.Note.GetExternalLinks">
+  GetExternalLinks()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1299"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets all external links in the note.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public List&lt;Note.ExternalLink&gt; GetExternalLinks()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="ObsidianDB.Note.html">Note</a>.<a class="xref" href="ObsidianDB.Note.ExternalLink.html">ExternalLink</a>&gt;</dt>
+    <dd><p>A list of external links.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ObsidianDB_Note_GetInternalLinks_" data-uid="ObsidianDB.Note.GetInternalLinks*"></a>
+
+  <h3 id="ObsidianDB_Note_GetInternalLinks" data-uid="ObsidianDB.Note.GetInternalLinks">
+  GetInternalLinks()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1290"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets all internal links in the note.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public List&lt;Note.InternalLink&gt; GetInternalLinks()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="ObsidianDB.Note.html">Note</a>.<a class="xref" href="ObsidianDB.Note.InternalLink.html">InternalLink</a>&gt;</dt>
+    <dd><p>A list of internal links.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ObsidianDB_Note_GetLinksToNote_" data-uid="ObsidianDB.Note.GetLinksToNote*"></a>
+
+  <h3 id="ObsidianDB_Note_GetLinksToNote_System_String_" data-uid="ObsidianDB.Note.GetLinksToNote(System.String)">
+  GetLinksToNote(string)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1309"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets all internal links that point to a specific note.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public List&lt;Note.InternalLink&gt; GetLinksToNote(string noteId)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>noteId</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The ID of the note to find links to.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="ObsidianDB.Note.html">Note</a>.<a class="xref" href="ObsidianDB.Note.InternalLink.html">InternalLink</a>&gt;</dt>
+    <dd><p>A list of internal links that point to the specified note.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ObsidianDB_Note_GetLinksToTitle_" data-uid="ObsidianDB.Note.GetLinksToTitle*"></a>
+
+  <h3 id="ObsidianDB_Note_GetLinksToTitle_System_String_" data-uid="ObsidianDB.Note.GetLinksToTitle(System.String)">
+  GetLinksToTitle(string)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1319"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets all internal links that point to a specific note title.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public List&lt;Note.InternalLink&gt; GetLinksToTitle(string title)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>title</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The title of the note to find links to.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="ObsidianDB.Note.html">Note</a>.<a class="xref" href="ObsidianDB.Note.InternalLink.html">InternalLink</a>&gt;</dt>
+    <dd><p>A list of internal links that point to the specified note title.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
   <a id="ObsidianDB_Note_Reload_" data-uid="ObsidianDB.Note.Reload*"></a>
 
   <h3 id="ObsidianDB_Note_Reload_System_String_" data-uid="ObsidianDB.Note.Reload(System.String)">
   Reload(string)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L203"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L268"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Reloads the note from disk, optionally with a new path.
@@ -576,11 +852,38 @@ The new path must be within the vault directory.</p>
 
 
 
+  <a id="ObsidianDB_Note_UpdateLinks_" data-uid="ObsidianDB.Note.UpdateLinks*"></a>
+
+  <h3 id="ObsidianDB_Note_UpdateLinks" data-uid="ObsidianDB.Note.UpdateLinks">
+  UpdateLinks()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1249"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Updates the collections of internal and external links by parsing the note's content.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void UpdateLinks()</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </article>
 
         <div class="contribution d-print-none">
-          <a href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L19" class="edit-link">Edit this page</a>
+          <a href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L21" class="edit-link">Edit this page</a>
         </div>
 
 

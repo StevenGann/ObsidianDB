@@ -52,6 +52,36 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/ObsidianDB.Note.BackLink.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ObsidianDB.Note.BackLink.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ObsidianDB.Note.ExternalLink.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ObsidianDB.Note.ExternalLink.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ObsidianDB.Note.InternalLink.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ObsidianDB.Note.InternalLink.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/ObsidianDB.Note.yml",
       "output": {
         ".html": {
