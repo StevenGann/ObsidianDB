@@ -159,7 +159,7 @@ tags, and unique identifiers. It ensures data integrity through atomic file oper
 
   <h3 id="ObsidianDB_Note__ctor_System_String_" data-uid="ObsidianDB.Note.#ctor(System.String)">
   Note(string)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L297"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L386"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Initializes a new instance of the Note class from a file path.</p>
@@ -217,7 +217,7 @@ The note is immediately ready for use after construction.</li>
 
   <h3 id="ObsidianDB_Note_Frontmatter" data-uid="ObsidianDB.Note.Frontmatter">
   Frontmatter
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L91"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L180"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets or sets the YAML frontmatter stored as key-value pairs.
@@ -251,7 +251,7 @@ The frontmatter is automatically synchronized with the file on save.</p>
 
   <h3 id="ObsidianDB_Note_Tags" data-uid="ObsidianDB.Note.Tags">
   Tags
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L99"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L188"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets or sets the collection of tags found in the note (both in frontmatter and inline).
@@ -290,7 +290,7 @@ Inline tags are identified by the # symbol followed by non-whitespace characters
 
   <h3 id="ObsidianDB_Note_Backlinks" data-uid="ObsidianDB.Note.Backlinks">
   Backlinks
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1436"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1525"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets a list of all backlinks to this note from other notes in the vault.</p>
@@ -323,7 +323,7 @@ Inline tags are identified by the # symbol followed by non-whitespace characters
 
   <h3 id="ObsidianDB_Note_Body" data-uid="ObsidianDB.Note.Body">
   Body
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L180"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L269"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets or sets the main content of the note (everything after the frontmatter).
@@ -362,7 +362,7 @@ Changes to the content are tracked through the Hash property.</p>
 
   <h3 id="ObsidianDB_Note_ExternalLinks" data-uid="ObsidianDB.Note.ExternalLinks">
   ExternalLinks
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L111"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L200"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the collection of external links found in the note.
@@ -395,7 +395,7 @@ External links are in standard Markdown format <a href="URL">Display Text</a>.</
 
   <h3 id="ObsidianDB_Note_Filename" data-uid="ObsidianDB.Note.Filename">
   Filename
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L45"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L134"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets or sets the filename portion of the path.
@@ -429,7 +429,7 @@ This is automatically updated when the Path property changes.</p>
 
   <h3 id="ObsidianDB_Note_Hash" data-uid="ObsidianDB.Note.Hash">
   Hash
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L73"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L162"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the MD5 hash of the note's content, stored in YAML frontmatter.
@@ -470,7 +470,7 @@ The hash is calculated from the note's content only, excluding the YAML frontmat
 
   <h3 id="ObsidianDB_Note_ID" data-uid="ObsidianDB.Note.ID">
   ID
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L54"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L143"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the unique identifier for the note, stored in YAML frontmatter.
@@ -511,7 +511,7 @@ The GUID is used for tracking note changes and maintaining relationships between
 
   <h3 id="ObsidianDB_Note_InternalLinks" data-uid="ObsidianDB.Note.InternalLinks">
   InternalLinks
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L105"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L194"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the collection of internal links found in the note.
@@ -553,7 +553,7 @@ The path must be within the Obsidian vault directory.</p>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public string Path { get; set; }</code></pre>
+    <pre><code class="lang-csharp hljs">public string Path { get; }</code></pre>
   </div>
 
 
@@ -584,7 +584,7 @@ The path must be within the Obsidian vault directory.</p>
 
   <h3 id="ObsidianDB_Note_PlaintextBody" data-uid="ObsidianDB.Note.PlaintextBody">
   PlaintextBody
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L215"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L304"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets or sets the plaintext content of the note, with all markdown formatting and code blocks removed.
@@ -625,6 +625,56 @@ When setting, passes the value directly to the Body property.</p>
 </ul>
 </div>
 
+
+
+
+  <a id="ObsidianDB_Note_RelativePath_" data-uid="ObsidianDB.Note.RelativePath*"></a>
+
+  <h3 id="ObsidianDB_Note_RelativePath" data-uid="ObsidianDB.Note.RelativePath">
+  RelativePath
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L52"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets or sets the path of the note file relative to its vault directory.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string RelativePath { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The path relative to the vault directory.</p>
+</dd>
+  </dl>
+
+
+
+
+  <h4 class="section" id="ObsidianDB_Note_RelativePath_remarks">Remarks</h4>
+  <div class="markdown level1 remarks"><p>This property uses the parent ObsidianDB instance's VaultPath to calculate the relative path.
+The returned path uses forward slashes (/) as directory separators for consistency.
+When setting this property, the file will be moved to the new location.</p>
+</div>
+
+  <h4 class="section">Exceptions</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.invalidoperationexception">InvalidOperationException</a></dt>
+    <dd><p>Thrown when the note is not associated with any ObsidianDB instance.</p>
+</dd>
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.argumentexception">ArgumentException</a></dt>
+    <dd><p>Thrown when the new path is invalid or outside the vault directory.</p>
+</dd>
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.ioexception">IOException</a></dt>
+    <dd><p>Thrown when there's an error moving the file.</p>
+</dd>
+  </dl>
 
 
 
@@ -670,7 +720,7 @@ If no H1 heading is found, falls back to the filename without extension.</p>
 
   <h3 id="ObsidianDB_Note_GetAllLinks" data-uid="ObsidianDB.Note.GetAllLinks">
   GetAllLinks()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1354"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1443"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets all links in the note, both internal and external.</p>
@@ -703,7 +753,7 @@ If no H1 heading is found, falls back to the filename without extension.</p>
 
   <h3 id="ObsidianDB_Note_GetExternalLinks" data-uid="ObsidianDB.Note.GetExternalLinks">
   GetExternalLinks()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1372"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1461"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets all external links in the note.</p>
@@ -736,7 +786,7 @@ If no H1 heading is found, falls back to the filename without extension.</p>
 
   <h3 id="ObsidianDB_Note_GetInternalLinks" data-uid="ObsidianDB.Note.GetInternalLinks">
   GetInternalLinks()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1363"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1452"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets all internal links in the note.</p>
@@ -769,7 +819,7 @@ If no H1 heading is found, falls back to the filename without extension.</p>
 
   <h3 id="ObsidianDB_Note_GetLinksToNote_System_String_" data-uid="ObsidianDB.Note.GetLinksToNote(System.String)">
   GetLinksToNote(string)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1382"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1471"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets all internal links that point to a specific note.</p>
@@ -808,7 +858,7 @@ If no H1 heading is found, falls back to the filename without extension.</p>
 
   <h3 id="ObsidianDB_Note_GetLinksToTitle_System_String_" data-uid="ObsidianDB.Note.GetLinksToTitle(System.String)">
   GetLinksToTitle(string)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1392"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1481"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets all internal links that point to a specific note title.</p>
@@ -847,7 +897,7 @@ If no H1 heading is found, falls back to the filename without extension.</p>
 
   <h3 id="ObsidianDB_Note_Reload_System_String_" data-uid="ObsidianDB.Note.Reload(System.String)">
   Reload(string)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L341"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L430"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Reloads the note from disk, optionally with a new path.
@@ -904,7 +954,7 @@ The new path must be within the vault directory.</p>
 
   <h3 id="ObsidianDB_Note_UpdateLinks" data-uid="ObsidianDB.Note.UpdateLinks">
   UpdateLinks()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1322"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/StevenGann/ObsidianDB/blob/main/ObsidianDB/Note.cs/#L1411"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Updates the collections of internal and external links by parsing the note's content.</p>
