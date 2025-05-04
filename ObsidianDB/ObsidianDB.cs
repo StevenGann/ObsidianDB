@@ -6,6 +6,8 @@ using System.Security.Principal;
 using Microsoft.Extensions.Logging;
 using ObsidianDB.Logging;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ObsidianDB;
 
@@ -159,7 +161,7 @@ public class ObsidianDB : IDisposable
     /// - Logs the number of files found and any errors encountered
     /// - Handles exceptions gracefully, logging errors but continuing with other files
     /// </remarks>
-    public void ScanNotes()
+    public void ScanNotes(bool vectorize = false)
     {
         var totalStopwatch = System.Diagnostics.Stopwatch.StartNew();
         _logger.LogInformation("Scanning vault {Vault}", Name);
@@ -207,47 +209,50 @@ public class ObsidianDB : IDisposable
         cacheStopwatch.Stop();
         _logger.LogInformation("Index caching completed in {ElapsedSeconds:F2}s", cacheStopwatch.Elapsed.TotalSeconds);
 
-        _logger.LogInformation("Vectorizing vault {Vault}", Name);
-        double fileCount = 0;
-        double vectorizeTotalSeconds = 0;
-        foreach (string file in files)
+        if (vectorize)
         {
+            _logger.LogInformation("Vectorizing vault {Vault}", Name);
+            double fileCount = 0;
+            double vectorizeTotalSeconds = 0;
+            foreach (string file in files)
+            {
+                try
+                {
+                    var vectorizeStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                    _logger.LogInformation("Vectorizing {File}", file);
+                    _vectorDB!.IndexDocumentFile(file, CustomPreprocessor, CustomPostprocessor);
+                    vectorizeStopwatch.Stop();
+
+                    double progress = (fileCount + 1) / files.Length;
+                    vectorizeTotalSeconds += vectorizeStopwatch.Elapsed.TotalSeconds;
+                    TimeSpan remainingTime = TimeSpan.FromSeconds((files.Length - (fileCount + 1)) * (vectorizeTotalSeconds / (fileCount + 1)));
+
+                    _logger.LogInformation("Vectorized {File} in {ElapsedSeconds:F2}s", file, vectorizeStopwatch.Elapsed.TotalSeconds);
+
+                    _logger.LogInformation("{FileCount}/{FileTotal} indexed, ETA {Hours:00}:{Minutes:00}:{Seconds:00}",
+                        (int)fileCount + 1, files.Length,
+                        remainingTime.Hours, remainingTime.Minutes, remainingTime.Seconds);
+
+                    if (((int)fileCount) % 5 == 0)
+                    {
+                        _vectorDB!.Save();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error vectorizing note {File}: {Message}", file, ex.Message);
+                }
+                fileCount++;
+            }
+
             try
             {
-                var vectorizeStopwatch = System.Diagnostics.Stopwatch.StartNew();
-                _logger.LogInformation("Vectorizing {File}", file);
-                _vectorDB!.IndexDocumentFile(file, CustomPreprocessor, CustomPostprocessor);
-                vectorizeStopwatch.Stop();
-
-                double progress  = (fileCount + 1)/ files.Length;
-                vectorizeTotalSeconds += vectorizeStopwatch.Elapsed.TotalSeconds;
-                TimeSpan remainingTime = TimeSpan.FromSeconds((files.Length - (fileCount + 1)) * (vectorizeTotalSeconds / (fileCount + 1)));
-
-                _logger.LogInformation("Vectorized {File} in {ElapsedSeconds:F2}s", file, vectorizeStopwatch.Elapsed.TotalSeconds);
-
-                _logger.LogInformation("{FileCount}/{FileTotal} indexed, ETA {Hours:00}:{Minutes:00}:{Seconds:00}", 
-                    (int)fileCount + 1, files.Length, 
-                    remainingTime.Hours, remainingTime.Minutes, remainingTime.Seconds);
-
-                if (((int)fileCount) % 5 == 0)
-                {
-                    _vectorDB!.Save();
-                }
+                _vectorDB!.Save();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error vectorizing note {File}: {Message}", file, ex.Message);
+                _logger.LogError(ex, "Error saving vector database: {Message}", ex.Message);
             }
-            fileCount++;
-        }
-
-        try
-        {
-            _vectorDB!.Save();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error saving vector database: {Message}", ex.Message);
         }
 
         totalStopwatch.Stop();
@@ -342,7 +347,7 @@ public class ObsidianDB : IDisposable
         {
             _logger.LogError(ex, "Error processing callbacks: {Message}", ex.Message);
         }
-        
+
     }
 
     /// <summary>
@@ -400,12 +405,12 @@ public class ObsidianDB : IDisposable
 
         if (path != null && path.ToUpperInvariant().EndsWith(".MD"))
         {
-            if(lineNumber == 0)
+            if (lineNumber == 0)
             {
                 skippingBlock = false;
             }
 
-            if(string.IsNullOrWhiteSpace(line))
+            if (string.IsNullOrWhiteSpace(line))
             {
                 return null;
             }
@@ -453,5 +458,205 @@ public class ObsidianDB : IDisposable
         ObsidianDB db = ObsidianDB.GetDatabaseInstance(path);
         Note note = db.GetFromPath(path);
         return $"{note.ID}|{lineNumber}";
+    }
+
+    /// <summary>
+    /// Creates a new note in the vault with the specified content and metadata.
+    /// </summary>
+    /// <param name="relativePath">The path of the note relative to the vault directory.</param>
+    /// <param name="body">The main content of the note.</param>
+    /// <param name="tags">Optional list of tags to add to the note.</param>
+    /// <param name="frontmatter">Optional dictionary of additional frontmatter key-value pairs.</param>
+    /// <returns>The newly created Note object.</returns>
+    /// <exception cref="ArgumentException">Thrown when the path is invalid or outside the vault directory.</exception>
+    /// <exception cref="IOException">Thrown when there's an error creating the file.</exception>
+    /// <remarks>
+    /// This method:
+    /// - Creates the necessary directories
+    /// - Creates the note file with YAML frontmatter
+    /// - Adds required metadata (GUID, hash)
+    /// - Adds the note to the database's collection
+    /// - Notifies subscribers of the new note
+    /// </remarks>
+    public Note AddNote(string relativePath, string body, List<string>? tags = null, Dictionary<string, List<string>?>? frontmatter = null)
+    {
+        if (_disposed)
+            throw new ObjectDisposedException(nameof(ObsidianDB));
+
+        if (string.IsNullOrWhiteSpace(relativePath))
+            throw new ArgumentException("Relative path cannot be empty", nameof(relativePath));
+
+        // Normalize the path to use system directory separators
+        string normalizedPath = relativePath.Replace('/', System.IO.Path.DirectorySeparatorChar);
+        string fullPath = System.IO.Path.Combine(VaultPath, normalizedPath);
+
+        // Ensure the path is within the vault
+        if (!fullPath.StartsWith(VaultPath, StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException("Note path must be within the vault directory", nameof(relativePath));
+
+        // Create the directory if it doesn't exist
+        string? directory = System.IO.Path.GetDirectoryName(fullPath);
+        if (directory != null && !Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        // Prepare the frontmatter
+        var noteFrontmatter = new Dictionary<string, List<string>?>();
+
+        // Add provided frontmatter
+        if (frontmatter != null)
+        {
+            foreach (var kvp in frontmatter)
+            {
+                noteFrontmatter[kvp.Key] = kvp.Value;
+            }
+        }
+
+        // Add tags if provided
+        if (tags != null && tags.Count > 0)
+        {
+            noteFrontmatter["tags"] = tags;
+        }
+
+        // Add creation and modification dates
+        string timestamp = DateTime.Now.ToString("dddd, MMMM d yyyy, h:M:ss tt");
+        noteFrontmatter["date created"] = [timestamp];
+        noteFrontmatter["date modified"] = [timestamp];
+
+        // Build the initial file content
+        var content = new List<string>
+        {
+            "---"
+        };
+
+        // Add frontmatter
+        foreach (var kvp in noteFrontmatter)
+        {
+            if (kvp.Value == null || kvp.Value.Count == 0)
+            {
+                content.Add($"{kvp.Key}:");
+            }
+            else if (kvp.Value.Count == 1)
+            {
+                content.Add($"{kvp.Key}: {kvp.Value[0]}");
+            }
+            else
+            {
+                content.Add($"{kvp.Key}:");
+                foreach (var value in kvp.Value)
+                {
+                    content.Add($"  - {value}");
+                }
+            }
+        }
+
+        content.Add("---");
+        content.Add(body);
+
+        // Write the initial file
+        File.WriteAllLines(fullPath, content);
+
+        // Create and initialize the note
+        Note note = new(fullPath);
+
+        lock (_lock)
+        {
+            Notes.Add(note);
+            _notesById[note.ID] = note;
+        }
+
+        // Notify subscribers
+        callbackManager.EnqueueUpdate(note.ID);
+
+        _logger.LogInformation("Created new note: {Path}", fullPath);
+        return note;
+    }
+
+    /// <summary>
+    /// Serializes the entire ObsidianDB instance and its notes to a JSON file.
+    /// This method is useful for debugging and inspecting the state of the database.
+    /// </summary>
+    /// <param name="path">The path where the JSON file should be saved.</param>
+    /// <remarks>
+    /// The JSON output includes:
+    /// - Basic database information (vault path, name)
+    /// - All notes with their metadata and content
+    /// - Internal and external links
+    /// - Tags and frontmatter
+    /// The output can be large for vaults with many notes.
+    /// </remarks>
+    public void ToJson(string path)
+    {
+        try
+        {
+            _logger.LogInformation("Serializing database to JSON: {Path}", path);
+
+            // Create a DTO that includes only the data we want to serialize
+            var dbDto = new
+            {
+                VaultPath,
+                Name,
+                Notes = Notes.Select(note => new
+                {
+                    note.Title,
+                    note.Path,
+                    note.RelativePath,
+                    note.ID,
+                    note.Hash,
+                    note.Frontmatter,
+                    note.Tags,
+                    InternalLinks = note.InternalLinks.Select(link => new
+                    {
+                        link.Title,
+                        link.DisplayText,
+                        link.NoteId
+                    }).ToList(),
+                    ExternalLinks = note.ExternalLinks.Select(link => new
+                    {
+                        link.DisplayText,
+                        link.Url
+                    }).ToList(),
+                    note.Body,
+                    note.PlaintextBody,
+                    Backlinks = note.Backlinks.Select(backlink => new
+                    {
+                        backlink.Title,
+                        backlink.DisplayText,
+                        backlink.SourceNoteId
+                    }).ToList()
+                }).ToList()
+            };
+
+            // Configure JSON serialization options
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+
+            // Create directory if it doesn't exist
+            string? directory = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            // Write to a temporary file first
+            string tempPath = path + ".tmp";
+            string json = JsonSerializer.Serialize(dbDto, options);
+            File.WriteAllText(tempPath, json);
+
+            // Move the temporary file to the final location
+            File.Move(tempPath, path, true);
+
+            _logger.LogInformation("Database successfully serialized to JSON: {Path}", path);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error serializing database to JSON: {Message}", ex.Message);
+            throw;
+        }
     }
 }

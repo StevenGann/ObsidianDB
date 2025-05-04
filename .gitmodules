@@ -1,3 +1,6 @@
 [submodule "submodules/HyperVectorDB"]
 	path = submodules/HyperVectorDB
 	url = https://github.com/StevenGann/HyperVectorDB.git
+[submodule "submodules/Personal-Wiki"]
+	path = submodules/Personal-Wiki
+	url = https://github.com/ashuotaku/Personal-Wiki

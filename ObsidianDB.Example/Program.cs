@@ -3,6 +3,7 @@ using System.Threading;
 using ObsidianDB;
 using ObsidianDB.Logging;
 using Microsoft.Extensions.Logging;
+using System.IO;
 
 // Configure logging
 LoggerService.ConfigureLogging(builder =>
@@ -11,23 +12,22 @@ LoggerService.ConfigureLogging(builder =>
     builder.AddConsole();
 });
 
-//new ObsidianDB.Note(@"C:\Users\sgann\Obsidian\Vault\Projects\Knowledgebase-AI\ObsidianDB.md");
+// Get the path to the example vault
+string exampleVaultPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "submodules", "Personal-Wiki");
+exampleVaultPath = Path.GetFullPath(exampleVaultPath);
 
-//Note note = new ObsidianDB.Note(@"C:\Users\owner\OneDrive\Apps\remotely-save\Vault\Projects\Knowledgebase-AI\ObsidianDB.md");
-//note.Frontmatter.Add("debug", ["testing"]);
-//note.Body = "A quick test\n" + note.Body;
-//note.Save();
-
-
-//ObsidianDB.ObsidianDB db = new(@"C:\Users\sgann\Obsidian\Vault");
-ObsidianDB.ObsidianDB db = new(@"C:\Users\owner\OneDrive\Apps\remotely-save\Vault");
+// Initialize and scan the database
+ObsidianDB.ObsidianDB db = new(exampleVaultPath);
 db.ScanNotes();
 
+// Export the database to JSON for debugging
+string jsonPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "vault_debug.json");
+db.ToJson(jsonPath);
+Console.WriteLine($"Database exported to: {jsonPath}");
+
+// Keep the program running to monitor changes
 while(true)
 {
-    db.Update();
+    //db.Update();
     Thread.Sleep(1000);
-
-    //Note n = db.GetFromId("59d9b9f0-73bd-430e-b0c5-2725c66cfbfa");
-    //Console.WriteLine(n.Hash);
 }
