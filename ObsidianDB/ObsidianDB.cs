@@ -293,6 +293,25 @@ public class ObsidianDB : IDisposable
     }
 
     /// <summary>
+    /// Retrieves a note from the database by its title.
+    /// </summary>
+    /// <param name="title">The title of the note to find.</param>
+    /// <returns>The Note object with the specified title, or null if not found.</returns>
+    public Note? GetFromTitle(string title)
+    {
+        if (_disposed)
+            throw new ObjectDisposedException(nameof(ObsidianDB));
+
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ArgumentNullException(nameof(title));
+
+        lock (_lock)
+        {
+            return Notes.FirstOrDefault(note => note.Title?.Equals(title, StringComparison.OrdinalIgnoreCase) == true);
+        }
+    }
+
+    /// <summary>
     /// Updates the database state by processing pending synchronization and callback events.
     /// </summary>
     /// <remarks>

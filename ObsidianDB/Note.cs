@@ -8,6 +8,8 @@ using Microsoft.Extensions.Logging;
 using ObsidianDB.Logging;
 using YamlDotNet.Serialization;
 using System.IO;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace ObsidianDB;
 
@@ -97,6 +99,68 @@ public class Note
     public List<string> Tags = new();
 
     /// <summary>
+    /// Gets the collection of internal links found in the note.
+    /// Internal links are in the format [[Note Title]] or [[Note Title|Display Text]].
+    /// </summary>
+    public List<InternalLink> InternalLinks { get; private set; } = new();
+
+    /// <summary>
+    /// Gets the collection of external links found in the note.
+    /// External links are in standard Markdown format [Display Text](URL).
+    /// </summary>
+    public List<ExternalLink> ExternalLinks { get; private set; } = new();
+
+    /// <summary>
+    /// Represents an internal link to another note in the vault.
+    /// </summary>
+    public class InternalLink
+    {
+        /// <summary>
+        /// Gets the title of the linked note.
+        /// </summary>
+        public string Title { get; }
+
+        /// <summary>
+        /// Gets the display text of the link, if different from the title.
+        /// </summary>
+        public string? DisplayText { get; }
+
+        /// <summary>
+        /// Gets the ID of the linked note, if found in the database.
+        /// </summary>
+        public string? NoteId { get; }
+
+        public InternalLink(string title, string? displayText, string? noteId)
+        {
+            Title = title;
+            DisplayText = displayText;
+            NoteId = noteId;
+        }
+    }
+
+    /// <summary>
+    /// Represents an external link to a resource outside the vault.
+    /// </summary>
+    public class ExternalLink
+    {
+        /// <summary>
+        /// Gets the display text of the link.
+        /// </summary>
+        public string DisplayText { get; }
+
+        /// <summary>
+        /// Gets the URL of the external resource.
+        /// </summary>
+        public string Url { get; }
+
+        public ExternalLink(string displayText, string url)
+        {
+            DisplayText = displayText;
+            Url = url;
+        }
+    }
+
+    /// <summary>
     /// Gets or sets the main content of the note (everything after the frontmatter).
     /// Implements lazy loading - content is only read when accessed.
     /// </summary>
@@ -178,6 +242,7 @@ public class Note
         else { InsertHash(); }
 
         Tags = ExtractTags(lines, Frontmatter);
+        UpdateLinks();
 
         _logger.LogInformation("========\n{Path}\nTitle: {Title}, {Filename}\n{ID}\n{Hash}\nTags:\n{TagList}",
             Path, Title, Filename, ID, Hash, string.Join("\n", Tags.Select(t => $" - #{t}")));
@@ -258,6 +323,7 @@ public class Note
                 }
 
                 Tags = ExtractTags(lines, Frontmatter);
+                UpdateLinks();
 
                 _logger.LogInformation("Note reloaded successfully: {Path}\nTitle: {Title}\nID: {ID}\nHash: {Hash}\nTags: {TagList}",
                     Path, Title, ID, Hash, string.Join(", ", Tags));
@@ -1175,5 +1241,143 @@ public class Note
         // If no H1 heading found, use the filename without extension
         string filename = System.IO.Path.GetFileNameWithoutExtension(Path);
         return filename;
+    }
+
+    /// <summary>
+    /// Updates the collections of internal and external links by parsing the note's content.
+    /// </summary>
+    public void UpdateLinks()
+    {
+        InternalLinks.Clear();
+        ExternalLinks.Clear();
+
+        string content = Body;
+        var db = ObsidianDB.GetDatabaseInstance(Path);
+
+        // Parse internal links (Wikilinks)
+        var internalLinkMatches = System.Text.RegularExpressions.Regex.Matches(content, @"\[\[([^\]\|]+)(?:\|([^\]]+))?\]\]");
+        foreach (System.Text.RegularExpressions.Match match in internalLinkMatches)
+        {
+            string title = match.Groups[1].Value.Trim();
+            string? displayText = match.Groups[2].Success ? match.Groups[2].Value.Trim() : null;
+            string? noteId = db?.GetFromTitle(title)?.ID;
+            InternalLinks.Add(new InternalLink(title, displayText, noteId));
+        }
+
+        // Parse external links (Markdown links)
+        var externalLinkMatches = System.Text.RegularExpressions.Regex.Matches(content, @"\[([^\]]+)\]\(([^\)]+)\)");
+        foreach (System.Text.RegularExpressions.Match match in externalLinkMatches)
+        {
+            string displayText = match.Groups[1].Value.Trim();
+            string url = match.Groups[2].Value.Trim();
+            ExternalLinks.Add(new ExternalLink(displayText, url));
+        }
+    }
+
+    /// <summary>
+    /// Gets all links in the note, both internal and external.
+    /// </summary>
+    /// <returns>A tuple containing lists of internal and external links.</returns>
+    public (List<InternalLink> internalLinks, List<ExternalLink> externalLinks) GetAllLinks()
+    {
+        return (InternalLinks, ExternalLinks);
+    }
+
+    /// <summary>
+    /// Gets all internal links in the note.
+    /// </summary>
+    /// <returns>A list of internal links.</returns>
+    public List<InternalLink> GetInternalLinks()
+    {
+        return InternalLinks;
+    }
+
+    /// <summary>
+    /// Gets all external links in the note.
+    /// </summary>
+    /// <returns>A list of external links.</returns>
+    public List<ExternalLink> GetExternalLinks()
+    {
+        return ExternalLinks;
+    }
+
+    /// <summary>
+    /// Gets all internal links that point to a specific note.
+    /// </summary>
+    /// <param name="noteId">The ID of the note to find links to.</param>
+    /// <returns>A list of internal links that point to the specified note.</returns>
+    public List<InternalLink> GetLinksToNote(string noteId)
+    {
+        return InternalLinks.Where(link => link.NoteId == noteId).ToList();
+    }
+
+    /// <summary>
+    /// Gets all internal links that point to a specific note title.
+    /// </summary>
+    /// <param name="title">The title of the note to find links to.</param>
+    /// <returns>A list of internal links that point to the specified note title.</returns>
+    public List<InternalLink> GetLinksToTitle(string title)
+    {
+        return InternalLinks.Where(link => link.Title.Equals(title, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    /// <summary>
+    /// Represents a backlink from another note to this note.
+    /// </summary>
+    public class BackLink
+    {
+        /// <summary>
+        /// Gets the title of the linked note.
+        /// </summary>
+        public string Title { get; }
+
+        /// <summary>
+        /// Gets the display text of the link, if different from the title.
+        /// </summary>
+        public string? DisplayText { get; }
+
+        /// <summary>
+        /// Gets the ID of the note that contains this link.
+        /// </summary>
+        public string SourceNoteId { get; }
+
+        public BackLink(string title, string? displayText, string sourceNoteId)
+        {
+            Title = title;
+            DisplayText = displayText;
+            SourceNoteId = sourceNoteId;
+        }
+    }
+
+    /// <summary>
+    /// Gets a list of all backlinks to this note from other notes in the vault.
+    /// </summary>
+    /// <value>A list of BackLink objects representing links from other notes to this note.</value>
+    public List<BackLink> Backlinks
+    {
+        get
+        {
+            var backlinks = new System.Collections.Concurrent.ConcurrentBag<BackLink>();
+            var db = ObsidianDB.GetDatabaseInstance(Path);
+            if (db == null) return new List<BackLink>();
+
+            var notes = db.GetNotes().ToList(); // Materialize the enumerable to avoid potential issues with parallel execution
+            var currentId = ID; // Capture the ID to avoid closure issues
+
+            Parallel.ForEach(notes, note =>
+            {
+                if (note.ID == currentId) return; // Skip self-references
+
+                foreach (var link in note.InternalLinks)
+                {
+                    if (link.NoteId == currentId)
+                    {
+                        backlinks.Add(new BackLink(link.Title, link.DisplayText, note.ID));
+                    }
+                }
+            });
+
+            return backlinks.ToList();
+        }
     }
 }
