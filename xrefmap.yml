@@ -559,6 +559,19 @@ references:
   isSpec: "True"
   fullName: ObsidianDB.Note.Path
   nameWithType: Note.Path
+- uid: ObsidianDB.Note.PlaintextBody
+  name: PlaintextBody
+  href: api/ObsidianDB.Note.html#ObsidianDB_Note_PlaintextBody
+  commentId: P:ObsidianDB.Note.PlaintextBody
+  fullName: ObsidianDB.Note.PlaintextBody
+  nameWithType: Note.PlaintextBody
+- uid: ObsidianDB.Note.PlaintextBody*
+  name: PlaintextBody
+  href: api/ObsidianDB.Note.html#ObsidianDB_Note_PlaintextBody_
+  commentId: Overload:ObsidianDB.Note.PlaintextBody
+  isSpec: "True"
+  fullName: ObsidianDB.Note.PlaintextBody
+  nameWithType: Note.PlaintextBody
 - uid: ObsidianDB.Note.Reload(System.String)
   name: Reload(string)
   href: api/ObsidianDB.Note.html#ObsidianDB_Note_Reload_System_String_
