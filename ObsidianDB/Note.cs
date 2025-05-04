@@ -189,6 +189,72 @@ public class Note
     }
 
     /// <summary>
+    /// Gets or sets the plaintext content of the note, with all markdown formatting and code blocks removed.
+    /// When getting, returns the Body property with markdown formatting stripped.
+    /// When setting, passes the value directly to the Body property.
+    /// </summary>
+    /// <value>The note's content as plaintext, without markdown formatting.</value>
+    /// <remarks>
+    /// The following markdown elements are removed:
+    /// - Headers (#, ##, etc.)
+    /// - Bold and italic markers (* and _)
+    /// - Links (both [text](url) and [[wiki-style]])
+    /// - Code blocks (both inline and multi-line)
+    /// - Lists markers (-, *, numbers)
+    /// - Blockquotes (>)
+    /// - Tables
+    /// - HTML tags
+    /// </remarks>
+    public string PlaintextBody
+    {
+        get
+        {
+            string content = Body;
+            
+            // Remove code blocks including their contents
+            content = System.Text.RegularExpressions.Regex.Replace(content, @"```(?:.*\n)?[\s\S]*?```", string.Empty);
+            content = System.Text.RegularExpressions.Regex.Replace(content, @"`[^`\n]+`", string.Empty);
+            
+            // Remove headers
+            content = System.Text.RegularExpressions.Regex.Replace(content, @"^#{1,6}\s.*$", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline);
+            
+            // Remove bold and italic
+            content = System.Text.RegularExpressions.Regex.Replace(content, @"\*\*.*?\*\*", "$1");
+            content = System.Text.RegularExpressions.Regex.Replace(content, @"\*.*?\*", "$1");
+            content = System.Text.RegularExpressions.Regex.Replace(content, @"__.*?__", "$1");
+            content = System.Text.RegularExpressions.Regex.Replace(content, @"_.*?_", "$1");
+            
+            // Remove links
+            content = System.Text.RegularExpressions.Regex.Replace(content, @"\[([^\]]*)\]\([^)]*\)", "$1");
+            content = System.Text.RegularExpressions.Regex.Replace(content, @"\[\[([^\]|]*)\|?[^\]]*\]\]", "$1");
+            
+            // Remove list markers
+            content = System.Text.RegularExpressions.Regex.Replace(content, @"^\s*[-*+]\s", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline);
+            content = System.Text.RegularExpressions.Regex.Replace(content, @"^\s*\d+\.\s", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline);
+            
+            // Remove blockquotes
+            content = System.Text.RegularExpressions.Regex.Replace(content, @"^\s*>\s", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline);
+            
+            // Remove HTML tags
+            content = System.Text.RegularExpressions.Regex.Replace(content, @"<[^>]*>", string.Empty);
+            
+            // Remove table formatting
+            content = System.Text.RegularExpressions.Regex.Replace(content, @"^\|.*\|$", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline);
+            content = System.Text.RegularExpressions.Regex.Replace(content, @"^[-|:\s]+$", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline);
+            
+            // Clean up extra whitespace and empty lines
+            content = System.Text.RegularExpressions.Regex.Replace(content, @"\n\s*\n\s*\n+", "\n\n");
+            content = content.Trim();
+            
+            return content;
+        }
+        set
+        {
+            Body = value;
+        }
+    }
+
+    /// <summary>
     /// Cache for the note's content to avoid repeated file reads.
     /// This cache is invalidated when the note is reloaded or when the content is modified.
     /// </summary>
