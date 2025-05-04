@@ -237,6 +237,19 @@ references:
   isSpec: "True"
   fullName: ObsidianDB.Note.BackLink.DisplayText
   nameWithType: Note.BackLink.DisplayText
+- uid: ObsidianDB.Note.BackLink.SourceNote
+  name: SourceNote
+  href: api/ObsidianDB.Note.BackLink.html#ObsidianDB_Note_BackLink_SourceNote
+  commentId: P:ObsidianDB.Note.BackLink.SourceNote
+  fullName: ObsidianDB.Note.BackLink.SourceNote
+  nameWithType: Note.BackLink.SourceNote
+- uid: ObsidianDB.Note.BackLink.SourceNote*
+  name: SourceNote
+  href: api/ObsidianDB.Note.BackLink.html#ObsidianDB_Note_BackLink_SourceNote_
+  commentId: Overload:ObsidianDB.Note.BackLink.SourceNote
+  isSpec: "True"
+  fullName: ObsidianDB.Note.BackLink.SourceNote
+  nameWithType: Note.BackLink.SourceNote
 - uid: ObsidianDB.Note.BackLink.SourceNoteId
   name: SourceNoteId
   href: api/ObsidianDB.Note.BackLink.html#ObsidianDB_Note_BackLink_SourceNoteId
@@ -507,6 +520,19 @@ references:
   isSpec: "True"
   fullName: ObsidianDB.Note.InternalLink.DisplayText
   nameWithType: Note.InternalLink.DisplayText
+- uid: ObsidianDB.Note.InternalLink.LinkedNote
+  name: LinkedNote
+  href: api/ObsidianDB.Note.InternalLink.html#ObsidianDB_Note_InternalLink_LinkedNote
+  commentId: P:ObsidianDB.Note.InternalLink.LinkedNote
+  fullName: ObsidianDB.Note.InternalLink.LinkedNote
+  nameWithType: Note.InternalLink.LinkedNote
+- uid: ObsidianDB.Note.InternalLink.LinkedNote*
+  name: LinkedNote
+  href: api/ObsidianDB.Note.InternalLink.html#ObsidianDB_Note_InternalLink_LinkedNote_
+  commentId: Overload:ObsidianDB.Note.InternalLink.LinkedNote
+  isSpec: "True"
+  fullName: ObsidianDB.Note.InternalLink.LinkedNote
+  nameWithType: Note.InternalLink.LinkedNote
 - uid: ObsidianDB.Note.InternalLink.NoteId
   name: NoteId
   href: api/ObsidianDB.Note.InternalLink.html#ObsidianDB_Note_InternalLink_NoteId
